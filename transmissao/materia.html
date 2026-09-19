@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR" data-era="bass-persuades">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090B">
+<title>Miley lança Bass Persuades · MCBR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="transmissao.css">
+</head>
+<body>
+<div class="progresso" role="presentation"></div>
+<div class="textura"></div>
+
+<div class="camada">
+
+  <header class="art-topo">
+    <div class="art-topo-in">
+      <a class="voltar-l" href="index.html">Voltar ao fluxo</a>
+      <span class="tit-mini" aria-hidden="true">Miley lança Bass Persuades, seu décimo álbum de estúdio</span>
+      <span class="meta" style="white-space:nowrap"><span class="dur">6&nbsp;min</span></span>
+    </div>
+  </header>
+
+  <article data-artigo id="conteudo">
+
+    <header class="art-cab">
+      <span class="et">Notícia</span>
+      <h1>Miley lança <em>Bass Persuades</em>, seu décimo álbum de estúdio</h1>
+      <p class="sub">Dez faixas, 37 minutos, e uma assinatura sem sobrenome pela primeira vez.</p>
+      <div class="assin">
+        <span class="av" aria-hidden="true">DB</span>
+        <div class="meta">
+          <b>Débora Brotto</b>
+          <span class="sep" aria-hidden="true">·</span>
+          <time datetime="2026-09-18T14:32">18 set 2026, 14h32</time>
+          <span class="dur">6&nbsp;min de leitura</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="art-corpo">
+      <div class="leitura" data-corpo></div>
+    </div>
+
+  </article>
+
+  <a class="proxima" href="materia.html">
+    <span class="rot">Próxima no fluxo</span>
+    <h3>O que <em>Bass Persuades</em> diz sobre quem Miley é agora</h3>
+    <p>Nota 84. Um disco que não tenta provar nada, e funciona justamente por isso.</p>
+  </a>
+
+  <footer class="rodape">
+    <div class="rodape-in">
+      <span>Miley Cyrus Brasil, no ar desde 2009. Fan site sem vínculo com a cantora.</span>
+      <span>Protótipo da Direção 2, Transmissão</span>
+    </div>
+  </footer>
+
+</div>
+
+<a class="voltar-proto" href="../index.html">Ver as três direções</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="../assets/conteudo.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+(function () {
+  montaCorpo(document.querySelector('[data-corpo]'));
+  montaTabbar('inicio');
+
+  /* O título compacto aparece quando o grande sai de vista: continuidade,
+     não decoração. Via ScrollTrigger, sem listener de scroll na mão. */
+  if (window.ScrollTrigger) {
+    ScrollTrigger.create({
+      trigger: '.art-cab h1',
+      start: 'bottom top+=60',
+      onToggle: function (self) {
+        document.querySelector('.art-topo').classList.toggle('rolou', self.isActive === false && self.progress === 1);
+      },
+      onEnter: function () { document.querySelector('.art-topo').classList.add('rolou'); },
+      onLeaveBack: function () { document.querySelector('.art-topo').classList.remove('rolou'); }
+    });
+  }
+})();
+</script>
+</body>
+</html>

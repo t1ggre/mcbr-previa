@@ -1,0 +1,280 @@
+/* ============================================================
+   DIREÇÃO 2 · TRANSMISSÃO
+   A home é um fluxo vivo, com carimbo de hora e acervo curado
+   preenchendo as folgas para que nunca pareça parada.
+   Momento autoral: a chegada sintoniza. O destaque resolve de um
+   varrimento desfocado para nítido, uma vez, no carregamento.
+   ============================================================ */
+
+:root {
+  --display: 'Unbounded', ui-sans-serif, system-ui, sans-serif;
+  --texto: 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+body { font-family: var(--texto); }
+
+.disp { font-family: var(--display); font-weight: 700; letter-spacing: -.04em; line-height: 1.04; text-wrap: balance; }
+.disp em { font-style: italic; font-weight: 600; }
+
+.env { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--pad); }
+
+/* ---------- Cabeçalho ---------- */
+.topo {
+  position: sticky; top: 0; z-index: 70;
+  background: rgba(9,9,11,.72);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border-bottom: 1px solid var(--line-2);
+}
+.topo-in {
+  max-width: var(--maxw); margin-inline: auto;
+  padding: .78rem var(--pad);
+  display: flex; align-items: center; gap: 1.3rem;
+}
+.topo .marca { margin-right: auto; }
+.topo .marca b { font-family: var(--display); font-size: 1.22rem; letter-spacing: -.055em; }
+.nav-d { display: flex; gap: 1.4rem; align-items: center; }
+.nav-d a {
+  font-size: .88rem; font-weight: 600;
+  color: var(--paper-2); text-decoration: none;
+  padding: .42rem .8rem; border-radius: var(--pill);
+  transition: color .25s var(--ease), background .25s var(--ease);
+}
+.nav-d a:hover { color: var(--paper); background: rgba(255,255,255,.06); }
+@media (max-width: 980px) { .nav-d { display: none; } }
+
+/* Indicador de era. O ponto pulsa porque marca estado real, não enfeite. */
+.aovivo {
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-size: .78rem; font-weight: 600;
+  color: var(--era);
+  padding: .35rem .8rem; border-radius: var(--pill);
+  background: rgba(var(--era-rgb), .11);
+  border: 1px solid rgba(var(--era-rgb), .3);
+  white-space: nowrap;
+}
+.aovivo .pt { width: 6px; height: 6px; border-radius: 50%; background: var(--era); }
+@media (prefers-reduced-motion: no-preference) {
+  .aovivo .pt { animation: pulsa 1.8s ease-in-out infinite; }
+}
+@keyframes pulsa { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@media (max-width: 560px) { .aovivo { display: none; } }
+
+/* ---------- Grade ---------- */
+.grade {
+  max-width: var(--maxw); margin-inline: auto;
+  padding: clamp(1.2rem, 3vh, 2.4rem) var(--pad) 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: clamp(1.1rem, 2.4vw, 2.2rem);
+  align-items: start;
+}
+@media (max-width: 1080px) { .grade { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Destaque ---------- */
+.destaque {
+  position: relative;
+  border-radius: var(--r-xl);
+  padding: clamp(1.4rem, 3.4vw, 2.8rem);
+  background: linear-gradient(150deg, rgba(var(--era-rgb), .22), rgba(255,255,255,.05) 62%);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  overflow: hidden;
+  transition: background .8s var(--ease);
+}
+.destaque::after {
+  content: ''; pointer-events: none;
+  position: absolute; inset: auto -6rem -14rem auto;
+  width: 24rem; height: 24rem; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--era-rgb), .4), transparent 68%);
+}
+.destaque > * { position: relative; }
+.dest-slot {
+  min-height: 14rem; display: flex; flex-direction: column; justify-content: flex-end;
+  /* O varrimento de chegada acontece aqui, no elemento interno, e nao
+     no cartao, que carrega backdrop-filter. Estado final explicito
+     porque o GSAP nao consegue interpolar clip-path ate `none`. */
+  clip-path: inset(0 0 0 0);
+}
+.destaque h1 {
+  margin: .9rem 0 .8rem;
+  /* Teto de 6rem no display, mesmo com a tela cheia. */
+  font-size: clamp(1.6rem, 1.05rem + 2.3vw, 3rem);
+  max-width: 22ch;
+}
+.destaque .chamada { margin: 0 0 1.1rem; color: #DEDBD6; font-size: clamp(.97rem, .92rem + .25vw, 1.1rem); line-height: 1.55; max-width: 50ch; }
+.dest-rod { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.2rem; }
+[data-pontos] { display: flex; gap: .4rem; }
+[data-pontos] button {
+  width: 28px; height: 3px; padding: 0; border: 0; cursor: pointer;
+  border-radius: var(--pill); background: rgba(255,255,255,.22);
+  transition: background .4s var(--ease);
+}
+[data-pontos] button[aria-current="true"] { background: var(--era); }
+[data-pontos] button:hover { background: var(--paper-2); }
+
+/* ---------- Fluxo ---------- */
+.fluxo-cab {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  margin: clamp(1.8rem, 4vh, 2.6rem) 0 1.1rem;
+}
+.fluxo-cab h2 {
+  margin: 0; font-family: var(--display); font-size: clamp(1.15rem, 1rem + .7vw, 1.6rem);
+  font-weight: 700; letter-spacing: -.04em;
+}
+.filtros { display: flex; gap: .4rem; margin-left: auto; }
+.filtros button {
+  border: 1px solid var(--line); background: transparent; color: var(--paper-2);
+  font-size: .82rem; font-weight: 600; padding: .38rem .9rem; border-radius: var(--pill); cursor: pointer;
+  transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+}
+.filtros button:hover { color: var(--paper); border-color: var(--paper-3); }
+.filtros button[aria-pressed="true"] { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+
+.fluxo { display: grid; gap: .7rem; }
+.cartao {
+  display: grid;
+  grid-template-columns: 4.4rem 1fr;
+  gap: clamp(.8rem, 2vw, 1.4rem);
+  padding: clamp(.95rem, 2.2vw, 1.35rem);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+  border: 1px solid var(--line-2);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  text-decoration: none;
+  transition: border-color .3s var(--ease), transform .3s var(--ease-out), background .3s var(--ease);
+}
+.cartao:hover { border-color: rgba(var(--era-rgb), .45); transform: translateY(-2px); background: rgba(255,255,255,.075); }
+.cartao:active { transform: translateY(0) scale(.995); }
+.carimbo {
+  font-size: .78rem; color: var(--paper-3);
+  padding-top: .25rem; line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+.carimbo b { display: block; color: var(--era); font-size: 1.05rem; letter-spacing: -.02em; }
+.cartao h3 {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1rem, .9rem + .55vw, 1.32rem);
+  line-height: 1.2; letter-spacing: -.04em;
+  margin: .5rem 0 .45rem; text-wrap: balance;
+  transition: color .3s var(--ease);
+}
+.cartao:hover h3 { color: var(--era); }
+.cartao p { margin: 0 0 .6rem; color: var(--paper-2); font-size: .92rem; line-height: 1.55; max-width: 60ch; }
+@media (max-width: 600px) {
+  .cartao { grid-template-columns: 1fr; gap: .4rem; }
+  .carimbo { display: flex; gap: .45rem; align-items: baseline; padding: 0; }
+  .carimbo b { display: inline; }
+}
+
+/* Cartão de acervo: o traço interrompido distingue passado de notícia. */
+.cartao.acervo { background: transparent; border-style: dashed; }
+.cartao.acervo .carimbo b { color: var(--paper-3); }
+.cartao.acervo .qual { font-size: .78rem; color: var(--paper-3); }
+
+/* ---------- Lateral ---------- */
+.lado { display: grid; gap: .9rem; position: sticky; top: 4.6rem; }
+@media (max-width: 1080px) { .lado { position: static; } }
+.bloco {
+  padding: clamp(1.1rem, 2.4vw, 1.5rem);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+  border: 1px solid var(--line-2);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+.bloco h4 {
+  font-family: var(--display);
+  font-size: .95rem; font-weight: 700; letter-spacing: -.03em;
+  color: var(--paper); margin: 0 0 .95rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.bloco h4 + .canais { margin-bottom: 1.5rem; }
+.bloco .nota { margin: .8rem 0 0; font-size: .8rem; color: var(--paper-3); line-height: 1.5; }
+
+.video {
+  display: block; border-radius: var(--r); overflow: hidden;
+  border: 1px solid var(--line-2); text-decoration: none;
+  transition: border-color .25s var(--ease);
+}
+.video:hover { border-color: var(--era); }
+.video .thumb {
+  aspect-ratio: 16/9;
+  background: linear-gradient(140deg, rgba(var(--era-rgb), .3), rgba(255,255,255,.05));
+  display: grid; place-items: center;
+  transition: background .8s var(--ease);
+}
+.video .thumb svg { width: 44px; height: 44px; opacity: .92; }
+.video .leg { padding: .65rem .8rem; font-size: .86rem; font-weight: 600; line-height: 1.35; }
+.video .leg small { display: block; color: var(--paper-3); font-weight: 500; margin-top: .22rem; font-size: .78rem; }
+
+.inst h3 { font-family: var(--display); }
+
+/* ============================================================
+   PÁGINA DE MATÉRIA
+   ============================================================ */
+.art-topo {
+  position: sticky; top: 0; z-index: 70;
+  background: rgba(9,9,11,.84);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border-bottom: 1px solid var(--line-2);
+}
+.art-topo-in {
+  max-width: var(--maxw); margin-inline: auto;
+  padding: .6rem var(--pad);
+  display: flex; align-items: center; gap: 1rem;
+}
+.art-topo .tit-mini {
+  font-size: .86rem; font-weight: 600; color: var(--paper-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0; opacity: 0;
+  transition: opacity .3s var(--ease);
+}
+.art-topo.rolou .tit-mini { opacity: 1; }
+.voltar-l {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .86rem; font-weight: 600; text-decoration: none; color: var(--paper);
+  padding: .4rem .9rem; border-radius: var(--pill); background: rgba(255,255,255,.07);
+  white-space: nowrap;
+  transition: background .25s var(--ease);
+}
+.voltar-l:hover { background: rgba(255,255,255,.14); }
+
+.art-cab { max-width: 48rem; margin-inline: auto; padding: clamp(2rem, 6vh, 3.6rem) var(--pad) clamp(1.4rem, 3vh, 2.2rem); }
+.art-cab h1 {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.75rem, 1.2rem + 2.6vw, 3.1rem);
+  line-height: 1.08; letter-spacing: -.045em;
+  margin: .9rem 0 1.1rem; text-wrap: balance;
+}
+.art-cab h1 em { font-style: italic; font-weight: 600; }
+.art-cab .sub { font-size: clamp(1rem, .93rem + .4vw, 1.18rem); line-height: 1.55; color: #D8D5D0; margin: 0 0 1.5rem; }
+.art-cab .assin {
+  display: flex; align-items: center; gap: .85rem; flex-wrap: wrap;
+  padding: .9rem 0; border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+}
+.av {
+  width: 36px; height: 36px; border-radius: 50%; flex: none;
+  background: linear-gradient(140deg, var(--era), var(--era-deep));
+  display: grid; place-items: center; font-size: .76rem; font-weight: 700; color: #fff;
+}
+
+.art-corpo { padding: 0 var(--pad) clamp(2rem, 5vh, 3.5rem); }
+.art-corpo .leitura h2 { font-family: var(--display); font-weight: 700; letter-spacing: -.04em; }
+
+/* A próxima matéria já começa no fim desta: continuidade de leitura. */
+.proxima {
+  max-width: 48rem; margin: clamp(2rem, 5vh, 3.5rem) auto 0;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border-radius: var(--r-xl);
+  background: linear-gradient(150deg, rgba(var(--era-rgb), .16), rgba(255,255,255,.04));
+  border: 1px solid var(--line);
+  text-decoration: none; display: block;
+  transition: border-color .3s var(--ease), transform .3s var(--ease-out);
+}
+.proxima:hover { border-color: rgba(var(--era-rgb), .5); transform: translateY(-2px); }
+.proxima .rot { font-size: .84rem; font-weight: 600; color: var(--era); }
+.proxima h3 { font-family: var(--display); font-weight: 700; font-size: clamp(1.15rem, 1rem + .8vw, 1.65rem); line-height: 1.16; letter-spacing: -.04em; margin: .6rem 0 .5rem; text-wrap: balance; }
+.proxima p { margin: 0; color: var(--paper-2); font-size: .95rem; line-height: 1.55; }

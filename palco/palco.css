@@ -1,0 +1,256 @@
+/* ============================================================
+   DIREÇÃO 3 · PALCO
+   Momento autoral: os atos correm na horizontal enquanto a seção
+   fica presa na tela. A rolagem vertical vira deslocamento lateral,
+   então o gesto de avançar é o próprio conceito da direção.
+   No toque não há pin: vira um trilho deslizável com o dedo.
+   ============================================================ */
+
+:root {
+  --display: 'Anton', 'Arial Narrow', ui-sans-serif, sans-serif;
+  --texto: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+body { font-family: var(--texto); }
+
+.disp {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -.01em;
+  /* Anton tem caixa-alta muito alta: abaixo de ~1.06 os acentos de
+     É, Á e Ú encostam na linha de cima. Português exige esta folga. */
+  line-height: 1.06;
+  padding-top: .06em;
+  text-wrap: balance;
+}
+.disp em { font-style: italic; }
+
+.env { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--pad); }
+
+/* ---------- Cabeçalho ---------- */
+.topo {
+  position: sticky; top: 0; z-index: 70;
+  padding: .85rem var(--pad);
+  display: flex; align-items: center; gap: 1.2rem;
+  background: linear-gradient(180deg, rgba(9,9,11,.9), rgba(9,9,11,0));
+  transition: background .4s var(--ease);
+}
+.topo.solido {
+  background: rgba(9,9,11,.82);
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  border-bottom: 1px solid var(--line-2);
+}
+.topo .marca { margin-right: auto; }
+.topo .marca b { font-family: var(--display); font-size: 1.62rem; letter-spacing: 0; }
+.nav-d { display: flex; gap: 1.6rem; }
+.nav-d a {
+  font-size: .88rem; font-weight: 600;
+  color: var(--paper-2); text-decoration: none;
+  transition: color .25s var(--ease);
+}
+.nav-d a:hover { color: var(--era); }
+@media (max-width: 900px) { .nav-d { display: none; } }
+
+/* ---------- Atos ----------
+   Sem nenhuma propriedade de rolagem na base: um container de rolagem
+   horizontal de tela cheia disputa a roda do mouse com a página e a
+   página perde. No computador quem move o trilho é o GSAP. */
+.atos { position: relative; overflow: hidden; }
+.atos-track {
+  display: flex;
+  height: calc(100svh - 4rem);
+  will-change: transform;
+}
+.ato-slide {
+  /* 100% da secao, nao 100vw: vw inclui a barra de rolagem e
+     desalinhava o trilho em alguns pixels a cada ato. */
+  flex: 0 0 100%;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 var(--pad) clamp(4.5rem, 12vh, 7rem);
+  position: relative;
+  /* Recorta o brilho decorativo. Sem isto ele vira uma camada de
+     composição gigante e trava a rolagem da página. */
+  overflow: hidden;
+}
+.ato-in { max-width: min(var(--maxw), 100%); margin-inline: auto; width: 100%; }
+.ato-slide h1 {
+  margin: 1.1rem 0 1.2rem;
+  /* Teto de 6rem: acima disso a manchete vira pôster e deixa de ser lida. */
+  font-size: clamp(2.6rem, 6.6vw, 6rem);
+  max-width: 17ch;
+}
+.ato-slide .chamada {
+  font-size: clamp(1rem, .92rem + .5vw, 1.25rem);
+  line-height: 1.5; color: #D8D5D0; max-width: 46ch; margin: 0 0 1.4rem;
+}
+.ato-slide .acoes { display: flex; gap: .9rem; align-items: center; flex-wrap: wrap; }
+
+.ato-slide::before {
+  content: ''; pointer-events: none;
+  position: absolute; z-index: -1;
+  width: 60vmax; height: 60vmax; border-radius: 50%;
+  right: -18vmax; top: -22vmax;
+  background: radial-gradient(circle, rgba(var(--era-rgb), .34), transparent 64%);
+}
+
+.atos-ctrl {
+  position: absolute; left: 0; right: 0;
+  bottom: clamp(1.6rem, 5vh, 3rem);
+  z-index: 5;
+  display: flex; align-items: center; gap: 1rem;
+  padding-inline: var(--pad);
+  max-width: var(--maxw); margin-inline: auto;
+}
+[data-pontos] { display: flex; gap: .4rem; }
+[data-pontos] button {
+  width: 48px; height: 3px; padding: 0; border: 0; cursor: pointer;
+  border-radius: var(--pill); background: rgba(255,255,255,.2);
+  transition: background .35s var(--ease);
+}
+[data-pontos] button[aria-current="true"] { background: var(--era); }
+[data-pontos] button:hover { background: var(--paper-2); }
+
+/* No toque o trilho vira deslizável com o dedo. Aqui pode ser um
+   container de rolagem: no celular não existe roda de mouse. */
+@media (max-width: 900px) {
+  .atos-track {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    transform: none !important;
+  }
+  .atos-track::-webkit-scrollbar { display: none; }
+  .ato-slide { scroll-snap-align: center; scroll-snap-stop: always; }
+}
+
+/* ---------- Seções seguintes ---------- */
+.secao { padding-block: clamp(3rem, 9vh, 6.5rem); }
+.secao > h2 {
+  font-family: var(--display); text-transform: uppercase;
+  font-size: clamp(1.5rem, 1.1rem + 1.7vw, 2.5rem);
+  margin: 0 0 clamp(1.2rem, 3.5vh, 2.2rem);
+  letter-spacing: -.008em; line-height: 1.06;
+}
+
+.leque {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+  gap: clamp(.7rem, 1.6vw, 1.2rem);
+}
+/* Com auto-fit puro, um monitor de 2560px gerava seis cartões
+   estreitos demais para a manchete respirar. */
+@media (min-width: 1500px) { .leque { grid-template-columns: repeat(4, 1fr); } }
+
+.peca {
+  position: relative;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 15rem;
+  padding: clamp(1.1rem, 2.4vw, 1.6rem);
+  border-radius: var(--r-xl);
+  background: var(--glass);
+  border: 1px solid var(--line-2);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform .4s var(--ease-out), border-color .35s var(--ease);
+}
+.peca::after {
+  content: ''; pointer-events: none;
+  position: absolute; inset: auto -4rem -8rem auto;
+  width: 16rem; height: 16rem; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--era-rgb), .3), transparent 68%);
+  opacity: 0; transition: opacity .4s var(--ease);
+}
+.peca:hover { transform: translateY(-5px); border-color: rgba(var(--era-rgb), .45); }
+.peca:hover::after { opacity: 1; }
+.peca:active { transform: translateY(0) scale(.995); }
+.peca > * { position: relative; }
+.peca h3 {
+  font-family: var(--display); text-transform: uppercase;
+  font-size: clamp(1.15rem, 1rem + .8vw, 1.65rem);
+  line-height: 1.06; letter-spacing: -.008em;
+  margin: .7rem 0 .55rem; text-wrap: balance;
+}
+.peca p { margin: 0 0 .8rem; color: var(--paper-2); font-size: .92rem; line-height: 1.55; }
+.peca.grande { grid-column: span 2; min-height: 21rem; }
+@media (max-width: 760px) { .peca.grande { grid-column: span 1; min-height: 15rem; } }
+
+/* ---------- Institucional ---------- */
+.inst h3 { font-family: var(--display); text-transform: uppercase; letter-spacing: -.008em; line-height: 1.02; }
+.inst-grade { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(1rem, 2.4vw, 2rem); align-items: stretch; }
+@media (max-width: 900px) { .inst-grade { grid-template-columns: 1fr; } }
+.painel {
+  padding: clamp(1.3rem, 2.8vw, 2rem);
+  border-radius: var(--r-xl);
+  background: var(--glass);
+  border: 1px solid var(--line-2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.painel h4 {
+  font-family: var(--display); text-transform: uppercase;
+  font-size: 1.05rem; letter-spacing: -.005em; margin: 0 0 1rem; color: var(--paper);
+}
+.painel h4 + .canais { margin-bottom: 1.6rem; }
+
+/* ============================================================
+   PÁGINA DE MATÉRIA
+   Espetáculo na porta, silêncio dentro.
+   ============================================================ */
+.poster {
+  position: sticky; top: 0;
+  height: 100svh;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 var(--pad) clamp(3rem, 9vh, 5rem);
+  overflow: hidden;
+  z-index: 0;
+}
+.poster::before {
+  content: ''; pointer-events: none;
+  position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(60vw 55vw at 76% 6%, rgba(var(--era-rgb), .42), transparent 62%),
+    radial-gradient(52vw 48vw at 12% 84%, rgba(var(--era-rgb), .14), transparent 66%);
+}
+.poster-in { max-width: var(--maxw); margin-inline: auto; width: 100%; }
+.poster h1 {
+  margin: 1rem 0 1.1rem;
+  font-size: clamp(2.5rem, 6.6vw, 6rem);
+  max-width: 16ch;
+}
+.poster .sub { font-size: clamp(1rem, .92rem + .5vw, 1.25rem); line-height: 1.5; color: #D8D5D0; max-width: 46ch; margin: 0; }
+
+.silencio {
+  position: relative; z-index: 1;
+  background: var(--ink);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: 0 -40px 90px rgba(0,0,0,.78);
+  padding: clamp(2.4rem, 7vh, 4.5rem) var(--pad) clamp(2rem, 5vh, 3.5rem);
+  margin-top: -3rem;
+}
+.silencio .assin {
+  max-width: min(68ch, 100%); margin: 0 auto clamp(1.8rem, 4vh, 2.6rem);
+  display: flex; align-items: center; gap: .85rem; flex-wrap: wrap;
+  padding-bottom: 1.2rem; border-bottom: 1px solid var(--line-2);
+}
+.av {
+  width: 36px; height: 36px; border-radius: 50%; flex: none;
+  background: linear-gradient(140deg, var(--era), var(--era-deep));
+  display: grid; place-items: center; font-size: .76rem; font-weight: 700; color: #fff;
+}
+.silencio .leitura h2 {
+  font-family: var(--display); text-transform: uppercase;
+  letter-spacing: 0; line-height: 1.1; font-weight: 400;
+}
+
+.art-fim {
+  max-width: min(68ch, 100%); margin: clamp(2.4rem, 6vh, 3.6rem) auto 0;
+  padding-top: 1.5rem; border-top: 1px solid var(--line-2);
+  display: flex; gap: .55rem; flex-wrap: wrap; align-items: center;
+  font-size: .88rem; color: var(--paper-3);
+}

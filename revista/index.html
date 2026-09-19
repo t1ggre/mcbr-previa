@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR" data-era="bass-persuades">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090B">
+<title>MCBR · Direção 1, Revista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="revista.css">
+</head>
+<body>
+<div class="textura"></div>
+
+<div class="camada">
+
+  <header class="topo">
+    <div class="topo-in">
+      <a class="marca" href="index.html"><b>MCBR</b><span>Miley Cyrus Brasil</span></a>
+      <p class="mini" data-mini aria-hidden="true"></p>
+      <nav class="nav-d" aria-label="Seções">
+        <a href="#ultimas">Notícias</a>
+        <a href="#ultimas">Colunas</a>
+        <a href="#">Discografia</a>
+        <a href="#mcbr">MCBR</a>
+        <a href="#">Buscar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+
+    <section class="capa env" aria-labelledby="destaque-titulo">
+      <div class="capa-slot" data-rotativo></div>
+      <p class="visualmente-oculto" data-vivo aria-live="polite"></p>
+      <div class="capa-rod">
+        <div data-pontos role="group" aria-label="Escolher destaque"></div>
+        <a class="btn" href="materia.html">Ler a matéria</a>
+      </div>
+    </section>
+
+    <section class="secao env" id="ultimas">
+      <h2>Últimas</h2>
+      <div class="lista" data-lista></div>
+    </section>
+
+    <section class="secao env" id="mcbr">
+      <div class="inst-grade">
+        <div class="inst">
+          <h3>17 anos contando a história da Miley no Brasil</h3>
+          <p>Desde 1º de janeiro de 2009, oito pessoas espalhadas por seis estados mantêm o MCBR no ar. Conheça a equipe, as parcerias e por onde a gente anda.</p>
+          <a class="btn" href="#">Conhecer o MCBR</a>
+        </div>
+        <aside class="painel">
+          <h4>Canais oficiais</h4>
+          <div class="canais">
+            <a class="canal" href="#"><span class="pt" aria-hidden="true"></span>YouTube</a>
+            <a class="canal" href="#">Instagram</a>
+            <a class="canal" href="#">X</a>
+            <a class="canal" href="#">TikTok</a>
+          </div>
+          <h4>Onde ouvir <span data-era-nome>Bass Persuades</span></h4>
+          <div class="canais">
+            <a class="canal" href="#">Spotify</a>
+            <a class="canal" href="#">YouTube Music</a>
+            <a class="canal" href="#">Deezer</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="rodape">
+    <div class="rodape-in">
+      <span>Miley Cyrus Brasil, no ar desde 2009. Fan site sem vínculo com a cantora.</span>
+      <span>Protótipo da Direção 1, Revista</span>
+    </div>
+  </footer>
+
+</div>
+
+<a class="voltar-proto" href="../index.html">Ver as três direções</a>
+
+<style>
+  .visualmente-oculto {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="../assets/conteudo.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+(function () {
+  var D = window.MCBR;
+
+  montaFaixaMutirao(document.querySelector('.camada'));
+
+  montaRotativo(document.querySelector('[data-rotativo]'), function (b) {
+    return '<span class="et" data-cat="' + b.cat + '">' + b.cat + '</span>' +
+           '<h1 class="disp" id="destaque-titulo">' + b.titulo + '</h1>' +
+           '<p class="capa-chamada">' + b.chamada + '</p>' +
+           metaDe(b);
+  }, 7000);
+
+  /* A lista não tem animação de entrada, de propósito: o único momento
+     autoral da página é a capa virando cabeçalho. O resto fica quieto. */
+  document.querySelector('[data-lista]').innerHTML = D.materias.map(function (m) {
+    return '<a class="item" href="materia.html">' +
+      '<div><span class="et" data-cat="' + m.cat + '">' + m.cat + '</span>' +
+      '<h3>' + m.titulo + '</h3><p>' + m.chamada + '</p>' +
+      metaDe(m, { longa: true, dur: false }) + '</div>' +
+      '<span class="quando">' + m.leitura.replace(' ', ' ') + '</span></a>';
+  }).join('');
+
+  montaTabbar('inicio');
+
+  /* ---- MOMENTO AUTORAL: a capa se recolhe e vira o cabeçalho ----
+     Continuidade entre dois estados da mesma manchete. Sem isso, o
+     leitor perde de vista o que estava lendo ao começar a rolar. */
+  if (!window.MCBR_SEM_MOTION && window.gsap && window.ScrollTrigger) {
+    var slot = document.querySelector('.capa-slot');
+    var mini = document.querySelector('[data-mini]');
+
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: '.capa',
+        start: 'top top',
+        /* Termina quando a capa acaba de sair da tela. Terminar antes
+           deixava um vão morto: a capa continuava ocupando a altura
+           toda, já vazia, antes de "Últimas" aparecer. */
+        end: 'bottom top',
+        scrub: .6
+      }
+    })
+    /* Sem apagar: apagar o conteudo no meio de uma secao de altura
+       cheia deixava a metade de baixo vazia na tela. Agora a capa sai
+       de quadro sozinha e so o titulo pequeno chega no cabecalho. */
+    .to([slot, '.capa-rod'], { yPercent: -6, ease: 'none' }, 0)
+    .to(mini, { opacity: 1, ease: 'none', duration: .3 }, .18);
+
+    /* O texto do cabeçalho acompanha a manchete que estiver no ar. */
+    var obs = new MutationObserver(function () {
+      var h = document.querySelector('.capa-slot h1');
+      if (h) mini.innerHTML = h.innerHTML;
+    });
+    obs.observe(document.querySelector('[data-rotativo]'), { childList: true, subtree: true });
+    var h0 = document.querySelector('.capa-slot h1');
+    if (h0) mini.innerHTML = h0.innerHTML;
+  }
+})();
+</script>
+</body>
+</html>

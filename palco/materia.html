@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR" data-era="bass-persuades">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090B">
+<title>Miley lança Bass Persuades · MCBR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="palco.css">
+</head>
+<body>
+<div class="progresso" role="presentation"></div>
+<div class="textura"></div>
+
+<div class="camada">
+
+  <header class="topo">
+    <a class="marca" href="index.html"><b>MCBR</b><span>Miley Cyrus Brasil</span></a>
+    <nav class="nav-d" aria-label="Seções">
+      <a href="index.html#ultimas">Notícias</a>
+      <a href="index.html#ultimas">Colunas</a>
+      <a href="#">Discografia</a>
+      <a href="index.html#mcbr">MCBR</a>
+      <a href="#">Buscar</a>
+    </nav>
+  </header>
+
+  <article data-artigo id="conteudo">
+
+    <header class="poster" data-poster>
+      <div class="poster-in">
+        <span class="et">Notícia</span>
+        <h1 class="disp">Miley lança <em>Bass Persuades</em></h1>
+        <p class="sub">Dez faixas, 37 minutos, e uma assinatura sem sobrenome pela primeira vez.</p>
+      </div>
+    </header>
+
+    <div class="silencio">
+      <div class="assin">
+        <span class="av" aria-hidden="true">DB</span>
+        <div class="meta">
+          <b>Débora Brotto</b>
+          <span class="sep" aria-hidden="true">·</span>
+          <time datetime="2026-09-18">18 de setembro de 2026</time>
+          <span class="dur">6&nbsp;min de leitura</span>
+        </div>
+      </div>
+
+      <div class="leitura" data-corpo></div>
+
+      <div class="art-fim">
+        <span>Compartilhar</span>
+        <a class="canal" href="#">X</a>
+        <a class="canal" href="#">WhatsApp</a>
+        <button class="canal" type="button">Copiar link</button>
+      </div>
+    </div>
+
+  </article>
+
+  <section class="secao env">
+    <h2>Continue</h2>
+    <div class="leque" data-leque></div>
+  </section>
+
+  <footer class="rodape">
+    <div class="rodape-in">
+      <span>Miley Cyrus Brasil, no ar desde 2009. Fan site sem vínculo com a cantora.</span>
+      <span>Protótipo da Direção 3, Palco</span>
+    </div>
+  </footer>
+
+</div>
+
+<a class="voltar-proto" href="../index.html">Ver as três direções</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="../assets/conteudo.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+(function () {
+  var D = window.MCBR;
+  montaCorpo(document.querySelector('[data-corpo]'));
+
+  document.querySelector('[data-leque]').innerHTML = D.materias.slice(0, 3).map(function (m) {
+    return '<a class="peca" href="materia.html">' +
+      '<span class="et" data-cat="' + m.cat + '">' + m.cat + '</span>' +
+      '<h3>' + m.titulo + '</h3><p>' + m.chamada + '</p>' +
+      metaDe(m) + '</a>';
+  }).join('');
+
+  montaTabbar('inicio');
+
+  /* MOMENTO AUTORAL: o pôster se dissolve e entrega a leitura.
+     O contraste entre espetáculo e silêncio é o conceito da direção,
+     e acontece uma vez, na passagem de um estado para o outro. */
+  if (window.gsap && window.ScrollTrigger && !window.MCBR_SEM_MOTION) {
+    /* Sem blur: mesmo motivo da Transmissão. A camada de composição
+       criada pelo filter pode não repintar ao assentar. */
+    gsap.to('.poster-in', {
+      opacity: 0,
+      y: -40,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.poster',
+        start: 'top top',
+        end: 'bottom 40%',
+        scrub: .5
+      }
+    });
+  }
+
+  if (window.ScrollTrigger) {
+    ScrollTrigger.create({
+      start: 'top -60',
+      end: 99999,
+      onToggle: function (self) {
+        document.querySelector('.topo').classList.toggle('solido', self.isActive);
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>

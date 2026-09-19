@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR" data-era="bass-persuades">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090B">
+<title>MCBR · Três direções</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  body { font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif; }
+  .env { max-width: 1240px; margin-inline: auto; padding-inline: var(--pad); }
+  .capa { padding: clamp(3rem, 10vh, 6rem) 0 clamp(2rem, 5vh, 3rem); }
+  .marca b { font-family: 'Archivo', sans-serif; font-size: 2rem; font-variation-settings: 'wdth' 118; }
+  h1 {
+    font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 110;
+    font-weight: 800; letter-spacing: -.04em; line-height: 1;
+    font-size: clamp(2.1rem, 1.4rem + 3.2vw, 4rem);
+    margin: 1.6rem 0 1rem; max-width: 18ch; text-wrap: balance;
+  }
+  .sub { font-size: clamp(1rem, .94rem + .4vw, 1.18rem); line-height: 1.6; color: #D2CFCA; max-width: 62ch; margin: 0; }
+  .aviso {
+    margin-top: 1.8rem; padding: 1.1rem 1.3rem; border-radius: var(--r);
+    background: rgba(var(--era-rgb), .1); border: 1px solid rgba(var(--era-rgb), .3);
+    font-size: .92rem; line-height: 1.6; color: #E4E1DC; max-width: 64ch;
+  }
+  .aviso b { color: #fff; }
+  .aviso a { color: var(--era); text-underline-offset: .2em; }
+
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; padding-bottom: clamp(3rem, 8vh, 5rem); }
+  .cartao {
+    display: flex; flex-direction: column;
+    padding: clamp(1.3rem, 3vw, 1.9rem);
+    border-radius: var(--r-xl);
+    background: var(--glass); border: 1px solid var(--line);
+    backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    position: relative; overflow: hidden;
+    transition: transform .4s var(--ease-out), border-color .35s var(--ease);
+  }
+  .cartao:hover { transform: translateY(-5px); border-color: rgba(var(--era-rgb), .5); }
+  .cartao::after {
+    content: ''; pointer-events: none;
+    position: absolute; inset: auto -5rem -9rem auto;
+    width: 18rem; height: 18rem; border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--era-rgb), .3), transparent 68%);
+    opacity: 0; transition: opacity .4s var(--ease);
+  }
+  .cartao:hover::after { opacity: 1; }
+  .cartao > * { position: relative; }
+  .cartao h2 {
+    font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 112;
+    font-weight: 800; letter-spacing: -.038em;
+    font-size: clamp(1.6rem, 1.3rem + 1.1vw, 2.2rem); line-height: 1; margin: 0 0 .8rem;
+  }
+  .cartao p { margin: 0 0 1rem; color: var(--paper-2); font-size: .94rem; line-height: 1.6; }
+  .cartao ul { list-style: none; margin: 0 0 1.3rem; padding: 0; display: grid; gap: .45rem; }
+  .cartao li { font-size: .88rem; color: #CFCCC7; padding-left: 1rem; position: relative; line-height: 1.5; }
+  .cartao li::before { content: ''; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--era); }
+  .cartao .risco { color: var(--paper-3); font-size: .85rem; margin: 0 0 1.3rem; line-height: 1.5; }
+  .cartao .momento { font-size: .88rem; color: var(--paper); margin: 0 0 1.3rem; line-height: 1.55; }
+  .cartao .momento b { color: var(--era); font-weight: 600; }
+  .links { margin-top: auto; display: flex; gap: .5rem; flex-wrap: wrap; }
+  .links a { font-size: .86rem; padding: .66em 1.15em; }
+  .tipos { font-size: .82rem; color: var(--paper-3); margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="textura"></div>
+
+<div class="camada env">
+
+  <header class="capa">
+    <span class="marca"><b>MCBR</b><span>Miley Cyrus Brasil</span></span>
+    <h1>Três direções para o site novo</h1>
+    <p class="sub">Forma e cor são as mesmas nas três: formas macias, transparências, texto flutuante e banner rotativo, com a paleta da <b>Bass Persuades</b>, a era ativa. O que muda é <b>o que a home é</b>, <b>o ritmo da leitura</b> e <b>qual único momento ganha movimento autoral</b>.</p>
+    <div class="aviso">
+      <b>Duas coisas para experimentar.</b> Abra no celular, porque a barra inferior de aplicativo só aparece lá, ou veja as cinco telas lado a lado na <a href="previa-celular.html">prévia no celular</a>. E use o seletor de era, o círculo colorido no canto inferior direito: ele repinta o site sem mexer em uma linha de conteúdo, e o texto de leitura não muda de tamanho nem de cor. Esse é o contrato.
+    </div>
+  </header>
+
+  <main class="grade">
+
+    <article class="cartao">
+      <h2>Revista</h2>
+      <p>A home é uma capa. Uma manchete grande ocupa a primeira tela e a tipografia faz o papel da imagem que a política de direitos não permite usar.</p>
+      <ul>
+        <li>Lista enxuta, sem numeração decorativa, com muito respiro</li>
+        <li>Matéria em coluna clássica, com capitular e citação na margem</li>
+      </ul>
+      <p class="momento"><b>Movimento:</b> a manchete da capa se recolhe e vira o título do cabeçalho conforme a leitura começa. Um só, e explica para onde o assunto foi.</p>
+      <p class="risco">Ritmo lento. Faz duas matérias por semana parecerem dois acontecimentos, mas vira gargalo se o volume crescer muito.</p>
+      <div class="links">
+        <a class="btn" href="revista/index.html">Abrir a home</a>
+        <a class="btn vazado" href="revista/materia.html">Ver a matéria</a>
+      </div>
+      <p class="tipos">Archivo com Newsreader</p>
+    </article>
+
+    <article class="cartao">
+      <h2>Transmissão</h2>
+      <p>A home é um fluxo vivo. Cartões translúcidos com carimbo de hora e a sensação de que alguma coisa está acontecendo agora.</p>
+      <ul>
+        <li>Lateral fixa com o YouTube atualizando sozinho e onde ouvir</li>
+        <li>O fluxo se completa com acervo curado e nunca parece parado</li>
+      </ul>
+      <p class="momento"><b>Movimento:</b> a chegada sintoniza. O destaque resolve de um varrimento desfocado para nítido, uma vez, no carregamento.</p>
+      <p class="risco">É a mais próxima da prévia que o time gostou, e a que mais depende de o time alimentar.</p>
+      <div class="links">
+        <a class="btn" href="transmissao/index.html">Abrir a home</a>
+        <a class="btn vazado" href="transmissao/materia.html">Ver a matéria</a>
+      </div>
+      <p class="tipos">Unbounded com Manrope</p>
+    </article>
+
+    <article class="cartao">
+      <h2>Palco</h2>
+      <p>A home é uma sequência de atos em tela cheia, com texto flutuando sobre a textura da era. De longe a mais parecida com um aplicativo.</p>
+      <ul>
+        <li>Preenche a tela no computador e desliza com o dedo no celular</li>
+        <li>A matéria abre como pôster e se dissolve numa coluna limpa</li>
+      </ul>
+      <p class="momento"><b>Movimento:</b> a rolagem vertical vira deslocamento lateral. A seção fica presa na tela e os atos correm de lado, então o gesto de avançar é o próprio conceito.</p>
+      <p class="risco">A mais pesada das três, e a que mais pode cansar em visita diária.</p>
+      <div class="links">
+        <a class="btn" href="palco/index.html">Abrir a home</a>
+        <a class="btn vazado" href="palco/materia.html">Ver a matéria</a>
+      </div>
+      <p class="tipos">Anton com Instrument Sans</p>
+    </article>
+
+  </main>
+
+</div>
+
+<script src="assets/conteudo.js"></script>
+<script src="assets/comum.js"></script>
+</body>
+</html>

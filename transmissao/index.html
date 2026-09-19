@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR" data-era="bass-persuades">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090B">
+<title>MCBR · Direção 2, Transmissão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="transmissao.css">
+</head>
+<body>
+<div class="textura"></div>
+
+<div class="camada">
+
+  <header class="topo">
+    <div class="topo-in">
+      <a class="marca" href="index.html"><b>MCBR</b><span>Miley Cyrus Brasil</span></a>
+      <nav class="nav-d" aria-label="Seções">
+        <a href="#fluxo">Notícias</a>
+        <a href="#fluxo">Colunas</a>
+        <a href="#">Discografia</a>
+        <a href="#mcbr">MCBR</a>
+        <a href="#">Buscar</a>
+      </nav>
+      <span class="aovivo"><span class="pt" aria-hidden="true"></span>Era <span data-era-nome>Bass Persuades</span></span>
+    </div>
+  </header>
+
+  <main class="grade" id="conteudo">
+
+    <div>
+      <section class="destaque" aria-labelledby="destaque-titulo">
+        <div class="dest-slot" data-rotativo></div>
+        <p class="visualmente-oculto" data-vivo aria-live="polite"></p>
+        <div class="dest-rod">
+          <div data-pontos role="group" aria-label="Escolher destaque"></div>
+          <a class="btn" href="materia.html">Abrir matéria</a>
+        </div>
+      </section>
+
+      <div class="fluxo-cab">
+        <h2 id="fluxo">No fluxo</h2>
+        <div class="filtros" role="group" aria-label="Filtrar o fluxo">
+          <button type="button" aria-pressed="true">Tudo</button>
+          <button type="button" aria-pressed="false">Notícia</button>
+          <button type="button" aria-pressed="false">Coluna</button>
+        </div>
+      </div>
+      <div class="fluxo" data-fluxo></div>
+      <p class="visualmente-oculto" data-filtro-vivo aria-live="polite"></p>
+    </div>
+
+    <aside class="lado">
+      <section class="bloco">
+        <h4>Último vídeo no YouTube</h4>
+        <a class="video" href="#">
+          <div class="thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M10 8.2 16 12l-6 3.8Z" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="leg">Let’s Get Married, clipe oficial<small>Miley, há 1 dia</small></div>
+        </a>
+        <p class="nota">Este bloco atualiza sozinho. As demais redes ficam como links: leitura automática de perfil de terceiro não é gratuita nem permitida.</p>
+      </section>
+
+      <section class="bloco">
+        <h4>Canais oficiais</h4>
+        <div class="canais">
+          <a class="canal" href="#"><span class="pt" aria-hidden="true"></span>YouTube</a>
+          <a class="canal" href="#">Instagram</a>
+          <a class="canal" href="#">X</a>
+          <a class="canal" href="#">TikTok</a>
+        </div>
+        <h4>Onde ouvir <span data-era-nome>Bass Persuades</span></h4>
+        <div class="canais">
+          <a class="canal" href="#">Spotify</a>
+          <a class="canal" href="#">YouTube Music</a>
+          <a class="canal" href="#">Deezer</a>
+        </div>
+      </section>
+
+      <section class="inst" id="mcbr">
+        <h3>Quem faz o MCBR</h3>
+        <p>No ar desde 2009. Oito pessoas, seis estados, uma fonte.</p>
+        <a class="btn" href="#">Conhecer</a>
+      </section>
+    </aside>
+
+  </main>
+
+  <footer class="rodape">
+    <div class="rodape-in">
+      <span>Miley Cyrus Brasil, no ar desde 2009. Fan site sem vínculo com a cantora.</span>
+      <span>Protótipo da Direção 2, Transmissão</span>
+    </div>
+  </footer>
+
+</div>
+
+<a class="voltar-proto" href="../index.html">Ver as três direções</a>
+
+<style>
+  .visualmente-oculto {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="../assets/conteudo.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+(function () {
+  var D = window.MCBR;
+
+  montaFaixaMutirao(document.querySelector('.camada'));
+
+  montaRotativo(document.querySelector('[data-rotativo]'), function (b) {
+    return '<span class="et" data-cat="' + b.cat + '">' + b.cat + '</span>' +
+           '<h1 class="disp" id="destaque-titulo">' + b.titulo + '</h1>' +
+           '<p class="chamada">' + b.chamada + '</p>' +
+           metaDe(b);
+  }, 6500);
+
+  /* O fluxo mistura matéria nova com acervo curado. Com uma ou duas
+     publicações por semana, a home nunca aparenta estar parada. */
+  var itens = [];
+  D.materias.forEach(function (m, i) {
+    itens.push({ tipo: 'materia', d: m });
+    if (i === 2) itens.push({ tipo: 'acervo', d: D.acervo[0] });
+    if (i === 5) itens.push({ tipo: 'acervo', d: D.acervo[1] });
+  });
+
+  document.querySelector('[data-fluxo]').innerHTML = itens.map(function (it) {
+    var m = it.d;
+    if (it.tipo === 'acervo') {
+      return '<a class="cartao acervo" href="materia.html" data-cat="Acervo">' +
+        '<div class="carimbo">hoje em<b>' + m.ano + '</b></div>' +
+        '<div><span class="qual">Do acervo</span>' +
+        '<h3>' + m.titulo + '</h3><p>' + m.chamada + '</p></div></a>';
+    }
+    var p = m.dataCurta.split(' ');
+    return '<a class="cartao" href="materia.html" data-cat="' + m.cat + '">' +
+      '<div class="carimbo">' + p[1] + '<b>' + p[0] + '</b></div>' +
+      '<div><span class="et" data-cat="' + m.cat + '">' + m.cat + '</span>' +
+      '<h3>' + m.titulo + '</h3><p>' + m.chamada + '</p>' +
+      metaDe(m) + '</div></a>';
+  }).join('');
+
+  /* Filtro: mudança de estado, então é anunciada e confirmada. */
+  var vivoFiltro = document.querySelector('[data-filtro-vivo]');
+  document.querySelectorAll('.filtros button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.filtros button').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+      b.setAttribute('aria-pressed', 'true');
+      var alvo = b.textContent.trim(), n = 0;
+      document.querySelectorAll('.fluxo .cartao').forEach(function (c) {
+        var mostra = (alvo === 'Tudo' || c.dataset.cat === alvo);
+        c.hidden = !mostra;
+        if (mostra) n++;
+      });
+      vivoFiltro.textContent = n + (n === 1 ? ' matéria' : ' matérias') + ' no fluxo.';
+    });
+  });
+
+  montaTabbar('inicio');
+
+  /* ---- MOMENTO AUTORAL: a chegada sintoniza ----
+     O destaque resolve de um varrimento, uma vez, no carregamento.
+     É a metáfora da direção, e acontece só na chegada, nunca a cada seção.
+
+     A guarda de visibilidade não é detalhe: em aba de segundo plano o
+     requestAnimationFrame não roda, o ticker do GSAP congela e um tween
+     `from` deixaria o conteúdo recortado e invisível para sempre. Quem
+     abre link com Ctrl+clique cairia exatamente nisso. Sem animação, a
+     página fica no seu estado natural, que é o estado legível. */
+  function sintoniza() {
+    if (window.MCBR_SEM_MOTION || !window.gsap) return;
+    if (document.visibilityState !== 'visible') return;
+    gsap.timeline({ defaults: { ease: 'power3.out' } })
+      .from('.dest-slot', { clipPath: 'inset(0 100% 0 0)', duration: .85, ease: 'power3.inOut' })
+      .from('.dest-slot > *', { opacity: 0, y: 16, duration: .6, stagger: .07 }, .3)
+      .from('.dest-rod', { opacity: 0, duration: .5 }, .65);
+  }
+  sintoniza();
+
+})();
+</script>
+</body>
+</html>
