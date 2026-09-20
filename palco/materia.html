@@ -12,31 +12,62 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/base.css">
 <link rel="stylesheet" href="palco.css">
+<script>try{if(sessionStorage.getItem('mcbr-tr')){document.documentElement.classList.add('chegando');sessionStorage.removeItem('mcbr-tr');}}catch(e){}</script>
 </head>
 <body>
+
+<div class="carregando" role="status" aria-label="Carregando">
+  <div class="moedas" aria-hidden="true">
+    <i style="--i:0"><b></b></i><i style="--i:1"><b></b></i><i style="--i:2"><b></b></i><i style="--i:3"><b></b></i>
+    <i style="--i:4"><b></b></i><i style="--i:5"><b></b></i><i style="--i:6"><b></b></i><i style="--i:7"><b></b></i>
+  </div>
+  <p>Miley Cyrus Brasil</p>
+</div>
+<div class="transicao" aria-hidden="true"><span>MCBR</span></div>
+
 <div class="progresso" role="presentation"></div>
+<canvas class="cortina" aria-hidden="true"></canvas>
 <div class="textura"></div>
 
-<div class="camada">
-
-  <header class="topo">
+<header class="topo-fixo">
+  <div class="faixa-slot" data-faixa></div>
+  <div class="topo">
     <a class="marca" href="index.html"><b>MCBR</b><span>Miley Cyrus Brasil</span></a>
     <nav class="nav-d" aria-label="Seções">
       <a href="index.html#ultimas">Notícias</a>
       <a href="index.html#ultimas">Colunas</a>
-      <a href="#">Discografia</a>
+      <a href="index.html#discografia">Discografia</a>
+      <a href="index.html#feed">Feed</a>
       <a href="index.html#mcbr">MCBR</a>
       <a href="#">Buscar</a>
     </nav>
-  </header>
+  </div>
+</header>
+
+<div class="camada">
 
   <article data-artigo id="conteudo">
 
-    <header class="poster" data-poster>
+    <!-- PÔSTER
+         Foto obrigatória (Imagem destacada do WordPress) + placa de
+         bruma segurando título e linha fina. A versão anterior deixava
+         o texto solto a um respiro da borda, sobre a parte clara da
+         foto, e ainda o dissolvia na rolagem: dava para perder o
+         título antes de terminar de lê-lo. Agora ele tem chão, recuo
+         e escurecimento, e não se dissolve. -->
+    <header class="poster">
+      <div class="poster-foto" data-poster-foto>
+        <img src="../assets/img/lancamento-bass-persuades.webp"
+             alt="Miley Cyrus em retrato de divulgação do álbum Bass Persuades"
+             style="object-position:50% 30%" fetchpriority="high">
+      </div>
       <div class="poster-in">
-        <span class="et">Notícia</span>
-        <h1 class="disp">Miley lança <em>Bass Persuades</em></h1>
-        <p class="sub">Dez faixas, 37 minutos, e uma assinatura sem sobrenome pela primeira vez.</p>
+        <div class="poster-txt bruma">
+          <span class="et">Notícia</span>
+          <h1 class="disp">Miley lança <em>Bass Persuades</em></h1>
+          <p class="sub">Dez faixas, 37 minutos, e uma assinatura sem sobrenome pela primeira vez.</p>
+        </div>
+        <p class="poster-cred">Foto: Divulgação / Atlantic Records</p>
       </div>
     </header>
 
@@ -64,7 +95,12 @@
   </article>
 
   <section class="secao env">
-    <h2>Continue</h2>
+    <div class="secao-cab">
+      <h2>Continue</h2>
+      <a class="mais" href="index.html">Voltar para a Home
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
     <div class="leque" data-leque></div>
   </section>
 
@@ -77,55 +113,36 @@
 
 </div>
 
+<!-- QUADRO FLUTUANTE DE CIRCULAÇÃO
+     Fora da .camada de propósito: .camada recebe um transform na
+     chegada, e transform em ancestral transforma position:fixed em
+     posicionamento relativo ao ancestral. -->
+<aside class="dock" data-dock hidden aria-label="Outras matérias">
+  <div class="dock-cab">
+    <h3>Continue lendo</h3>
+    <button class="dock-toggle" type="button" data-dock-toggle aria-expanded="true"
+            aria-label="Recolher sugestões">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+  </div>
+  <ol data-dock-lista></ol>
+</aside>
+
 <a class="voltar-proto" href="../index.html">Ver as três direções</a>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
 <script src="../assets/conteudo.js"></script>
 <script src="../assets/comum.js"></script>
+<script src="palco.js"></script>
 <script>
-(function () {
-  var D = window.MCBR;
+document.addEventListener('DOMContentLoaded', function () {
+  montaFaixaMutirao(document.querySelector('[data-faixa]'));
   montaCorpo(document.querySelector('[data-corpo]'));
-
-  document.querySelector('[data-leque]').innerHTML = D.materias.slice(0, 3).map(function (m) {
-    return '<a class="peca" href="materia.html">' +
-      '<span class="et" data-cat="' + m.cat + '">' + m.cat + '</span>' +
-      '<h3>' + m.titulo + '</h3><p>' + m.chamada + '</p>' +
-      metaDe(m) + '</a>';
-  }).join('');
-
+  montaLeque(document.querySelector('[data-leque]'), window.MCBR.materias.slice(1, 4), false);
   montaTabbar('inicio');
-
-  /* MOMENTO AUTORAL: o pôster se dissolve e entrega a leitura.
-     O contraste entre espetáculo e silêncio é o conceito da direção,
-     e acontece uma vez, na passagem de um estado para o outro. */
-  if (window.gsap && window.ScrollTrigger && !window.MCBR_SEM_MOTION) {
-    /* Sem blur: mesmo motivo da Transmissão. A camada de composição
-       criada pelo filter pode não repintar ao assentar. */
-    gsap.to('.poster-in', {
-      opacity: 0,
-      y: -40,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '.poster',
-        start: 'top top',
-        end: 'bottom 40%',
-        scrub: .5
-      }
-    });
-  }
-
-  if (window.ScrollTrigger) {
-    ScrollTrigger.create({
-      start: 'top -60',
-      end: 99999,
-      onToggle: function (self) {
-        document.querySelector('.topo').classList.toggle('solido', self.isActive);
-      }
-    });
-  }
-})();
+});
 </script>
 </body>
 </html>

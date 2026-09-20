@@ -1,16 +1,40 @@
 /* ============================================================
-   DIREÇÃO 3 · PALCO
-   Momento autoral: os atos correm na horizontal enquanto a seção
-   fica presa na tela. A rolagem vertical vira deslocamento lateral,
-   então o gesto de avançar é o próprio conceito da direção.
-   No toque não há pin: vira um trilho deslizável com o dedo.
+   DIREÇÃO 3 · PALCO  —  refino 2
+   O que mudou nesta passada, e por quê:
+
+   1. Nada prende a rolagem. O herói tinha pin com scrub, o que
+      obrigava a atravessar os três destaques antes de descer; o rolo
+      de discos herdou o efeito e virou impossível de operar, porque
+      cada capa ali é um filtro de busca e ninguém consegue parar num
+      alvo enquanto a rolagem manda. Os dois saíram.
+   2. O momento autoral da direção é a CORTINA: ela desce e sobe na
+      troca de página. Num site chamado Palco, a cortina é o gesto
+      certo, e é o único que não cobra nada da leitura.
+   3. Nada de placa de vidro sobre foto. O que segura o texto é a
+      BRUMA — blur mascarado por degradê, sem aresta e sem canto. Ver
+      o bloco BRUMA logo abaixo.
+   4. Cabeçalho fixo, cantos pouco arredondados, foto obrigatória.
    ============================================================ */
 
 :root {
   --display: 'Anton', 'Arial Narrow', ui-sans-serif, sans-serif;
   --texto: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Menos arredondado. Os valores da base servem às outras direções;
+     aqui o Palco quer aresta, não bolha. */
+  --r-sm: 6px;
+  --r:    10px;
+  --r-lg: 12px;
+  --r-xl: 14px;
+
+  --h-topo: 62px;
 }
 body { font-family: var(--texto); }
+
+/* A cor da Era passa a vir da cortina de luz, em canvas. A textura da
+   base fica só com o grão por cima — dois campos de gradiente somados
+   viravam sopa. */
+.textura { background: transparent; }
 
 .disp {
   font-family: var(--display);
@@ -23,215 +47,788 @@ body { font-family: var(--texto); }
   padding-top: .06em;
   text-wrap: balance;
 }
-.disp em { font-style: italic; }
+.disp em {
+  font-style: italic;
+  /* Anton não tem itálico real: o navegador inclina a romana e a
+     última letra encosta na pontuação seguinte. Uma folga resolve. */
+  font-synthesis: style;
+  padding-right: .07em;
+}
 
 .env { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--pad); }
 
-/* ---------- Cabeçalho ---------- */
+/* ============================================================
+   CORTINA DE LUZ  (fundo)
+   Colunas verticais de luz nas cores da Era, reagindo ao ponteiro.
+   Canvas 2D, meia resolução: o efeito é vertical e não perde nada
+   com isso. Fica atrás de tudo e nunca recebe evento.
+   ============================================================ */
+.cortina {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+  display: block; width: 100%; height: 100%;
+  opacity: .72;
+}
+
+/* ============================================================
+   BRUMA
+   Substitui a placa de vidro. Um blur mascarado por degradê: forte
+   atrás do texto, zero antes de encostar em qualquer borda. Não tem
+   contorno, não tem canto, não existe como retângulo — por isso não
+   compete com a foto nem vira moldura dentro da moldura.
+
+   O elemento que a hospeda precisa ser raiz de backdrop (isolation:
+   isolate), senão o blur amostra a página inteira em vez de amostrar
+   só a foto daquele bloco.
+   ============================================================ */
+.bruma { position: relative; }
+.bruma::before {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  inset: var(--bruma-inset, 0);
+  backdrop-filter: blur(var(--bruma-blur, 30px)) saturate(1.1) brightness(var(--bruma-luz, .55));
+  -webkit-backdrop-filter: blur(var(--bruma-blur, 30px)) saturate(1.1) brightness(var(--bruma-luz, .55));
+  -webkit-mask-image: var(--bruma-mask);
+          mask-image: var(--bruma-mask);
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect;
+  transition: backdrop-filter .4s var(--ease);
+}
+
+/* ============================================================
+   CABEÇALHO FIXO
+   Faixa de mutirão + navegação, fixos no topo da janela. Ao rolar,
+   a faixa recolhe e sobra só a barra — o menu nunca sai da tela.
+   ============================================================ */
+.topo-fixo {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 70;
+  transition: transform .26s var(--ease);
+}
+
+/* Ao rolar, o cabeçalho inteiro sobe a altura exata da faixa: ela sai
+   pela borda de cima e a barra de navegação encosta no topo. É
+   transform, não max-height — animar altura força relayout de tudo que
+   está abaixo, a cada quadro. --h-faixa é medido em palco.js, porque a
+   faixa é montada por JS e muda de altura ao quebrar linha no celular. */
+.rolou .topo-fixo { transform: translateY(calc(var(--h-faixa, 0px) * -1)); }
+.faixa-slot { overflow: hidden; }
+.mutirao { position: relative; z-index: 2; }
+
 .topo {
-  position: sticky; top: 0; z-index: 70;
-  padding: .85rem var(--pad);
+  position: relative;
+  padding: .8rem var(--pad);
   display: flex; align-items: center; gap: 1.2rem;
-  background: linear-gradient(180deg, rgba(9,9,11,.9), rgba(9,9,11,0));
-  transition: background .4s var(--ease);
 }
-.topo.solido {
-  background: rgba(9,9,11,.82);
-  backdrop-filter: blur(22px) saturate(1.5);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  border-bottom: 1px solid var(--line-2);
+/* O degradê escuro anterior terminava num ponto definido e, sobre foto
+   clara, esse fim aparecia como uma faixa preta atravessando a imagem.
+   Agora é bruma: blur que se dissolve para baixo e não tem fim
+   visível. Nenhuma borda, nenhuma linha. */
+.topo::before {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  inset: -1rem 0 -3.4rem;
+  backdrop-filter: blur(14px) saturate(1.05) brightness(.74);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05) brightness(.74);
+  -webkit-mask-image: linear-gradient(180deg, #000 0 34%, rgba(0,0,0,.4) 62%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0 34%, rgba(0,0,0,.4) 62%, transparent 100%);
+  transition: backdrop-filter .22s var(--ease), inset .22s var(--ease);
 }
+.rolou .topo::before {
+  inset: -1rem 0 -1.8rem;
+  backdrop-filter: blur(26px) saturate(1.1) brightness(.48);
+  -webkit-backdrop-filter: blur(26px) saturate(1.1) brightness(.48);
+}
+/* Sobre foto clara o blur sozinho não basta para texto de 0.86rem. */
+.topo .marca span, .nav-d a { text-shadow: 0 1px 12px rgba(0,0,0,.75); }
 .topo .marca { margin-right: auto; }
 .topo .marca b { font-family: var(--display); font-size: 1.62rem; letter-spacing: 0; }
-.nav-d { display: flex; gap: 1.6rem; }
+.nav-d { display: flex; gap: 1.5rem; align-items: center; }
 .nav-d a {
-  font-size: .88rem; font-weight: 600;
+  position: relative;
+  font-size: .86rem; font-weight: 600;
   color: var(--paper-2); text-decoration: none;
+  padding-block: .2rem;
   transition: color .25s var(--ease);
 }
-.nav-d a:hover { color: var(--era); }
+.nav-d a::after {
+  content: ''; position: absolute; left: 0; right: 100%; bottom: 0; height: 1.5px;
+  background: var(--era);
+  transition: right .3s var(--ease);
+}
+.nav-d a:hover { color: var(--paper); }
+.nav-d a:hover::after { right: 0; }
 @media (max-width: 900px) { .nav-d { display: none; } }
 
-/* ---------- Atos ----------
-   Sem nenhuma propriedade de rolagem na base: um container de rolagem
-   horizontal de tela cheia disputa a roda do mouse com a página e a
-   página perde. No computador quem move o trilho é o GSAP. */
-.atos { position: relative; overflow: hidden; }
-.atos-track {
-  display: flex;
-  height: calc(100svh - 4rem);
-  will-change: transform;
-}
-.ato-slide {
-  /* 100% da secao, nao 100vw: vw inclui a barra de rolagem e
-     desalinhava o trilho em alguns pixels a cada ato. */
-  flex: 0 0 100%;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 0 var(--pad) clamp(4.5rem, 12vh, 7rem);
+/* ============================================================
+   PALCO — os três destaques
+   Sem pin. Troca sozinha, com foto, e a bruma segura o texto sem
+   desenhar caixa nenhuma sobre a imagem.
+   ============================================================ */
+.palco {
   position: relative;
-  /* Recorta o brilho decorativo. Sem isto ele vira uma camada de
-     composição gigante e trava a rolagem da página. */
+  min-height: clamp(34rem, 92svh, 56rem);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: calc(var(--h-topo) + 2rem) var(--pad) clamp(3rem, 8vh, 5rem);
   overflow: hidden;
+  isolation: isolate;
 }
-.ato-in { max-width: min(var(--maxw), 100%); margin-inline: auto; width: 100%; }
-.ato-slide h1 {
-  margin: 1.1rem 0 1.2rem;
-  /* Teto de 6rem: acima disso a manchete vira pôster e deixa de ser lida. */
-  font-size: clamp(2.6rem, 6.6vw, 6rem);
-  max-width: 17ch;
-}
-.ato-slide .chamada {
-  font-size: clamp(1rem, .92rem + .5vw, 1.25rem);
-  line-height: 1.5; color: #D8D5D0; max-width: 46ch; margin: 0 0 1.4rem;
-}
-.ato-slide .acoes { display: flex; gap: .9rem; align-items: center; flex-wrap: wrap; }
 
-.ato-slide::before {
+.palco-fotos { position: absolute; inset: 0; z-index: -2; }
+.pf {
+  position: absolute; inset: 0;
+  opacity: 0;
+  /* Troca curta: 1.1s era tempo de assistir, não de trocar. */
+  transition: opacity .45s var(--ease);
+}
+.pf.on { opacity: 1; }
+.pf img { width: 100%; height: 100%; object-fit: cover; }
+/* Deriva lenta só no destaque no ar. Anima transform: se o quadro
+   congelar em aba de fundo, a foto continua visível. */
+.pf.on img { animation: deriva 11s var(--ease-out) forwards; }
+@keyframes deriva { from { transform: scale(1.07); } to { transform: scale(1); } }
+
+/* Escurecimento. Dois eixos: de baixo, para a placa; da esquerda,
+   para a coluna de texto. Sem isso, foto clara come título branco. */
+.palco-fotos::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(0deg, rgba(6,6,8,.8) 0%, rgba(6,6,8,.42) 24%, transparent 56%, rgba(6,6,8,.42) 100%),
+    linear-gradient(90deg, rgba(6,6,8,.42) 0%, transparent 46%);
+}
+/* Brilho da Era no canto, recortado pelo overflow da seção. */
+.palco::before {
   content: ''; pointer-events: none;
   position: absolute; z-index: -1;
-  width: 60vmax; height: 60vmax; border-radius: 50%;
-  right: -18vmax; top: -22vmax;
-  background: radial-gradient(circle, rgba(var(--era-rgb), .34), transparent 64%);
+  width: 58vmax; height: 58vmax; border-radius: 50%;
+  right: -20vmax; top: -24vmax;
+  background: radial-gradient(circle, rgba(var(--era-rgb), .3), transparent 64%);
+  mix-blend-mode: screen;
 }
 
-.atos-ctrl {
-  position: absolute; left: 0; right: 0;
-  bottom: clamp(1.6rem, 5vh, 3rem);
-  z-index: 5;
-  display: flex; align-items: center; gap: 1rem;
-  padding-inline: var(--pad);
-  max-width: var(--maxw); margin-inline: auto;
+.palco-in { position: relative; width: 100%; max-width: var(--maxw); margin-inline: auto; }
+
+/* Coluna de texto mais estreita que antes: a foto fica visível à
+   direita em vez de ser coberta por uma placa de 58rem.
+
+   A bruma é uma COLUNA VERTICAL: pega a altura inteira do herói e se
+   dissolve só para a direita. Antes ela também sumia em cima e
+   embaixo, o que desenhava uma faixa horizontal no meio da foto —
+   uma forma, que é exatamente o que não se quer aqui. Recortada pelo
+   overflow da seção, a coluna não tem nenhuma aresta visível. */
+.palco-txt {
+  max-width: 44rem;
+  --bruma-inset: -30rem -9rem -30rem -100vw;
+  --bruma-blur: 36px;
+  --bruma-luz: .46;
+  --bruma-mask: linear-gradient(90deg, #000 0 48%, rgba(0,0,0,.3) 78%, transparent 100%);
 }
-[data-pontos] { display: flex; gap: .4rem; }
-[data-pontos] button {
-  width: 48px; height: 3px; padding: 0; border: 0; cursor: pointer;
+.palco-txt h1 {
+  margin: 1rem 0 1rem;
+  /* Teto de 5.4rem: acima disso a manchete vira pôster e deixa de ser lida. */
+  font-size: clamp(2.2rem, 4.7vw, 5rem);
+  max-width: 17ch;
+  text-shadow: 0 2px 30px rgba(0,0,0,.4);
+}
+.palco-txt .chamada {
+  font-size: clamp(1rem, .92rem + .45vw, 1.2rem);
+  line-height: 1.5; color: #E2DFDA; max-width: 48ch; margin: 0 0 1.4rem;
+}
+.palco-txt .acoes { display: flex; gap: .9rem; align-items: center; flex-wrap: wrap; }
+.palco-txt .meta { margin-left: .2rem; }
+
+/* Controles */
+.palco-ctrl {
+  display: flex; align-items: center; gap: .9rem;
+  margin-top: clamp(1.2rem, 3vh, 2rem);
+}
+.seta {
+  width: 40px; height: 40px; flex: none;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  color: var(--paper-2); cursor: pointer;
+  display: grid; place-items: center;
+  transition: color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+}
+.seta:hover { color: var(--paper); border-color: var(--era); background: rgba(255,255,255,.1); }
+.seta svg { width: 18px; height: 18px; }
+@media (max-width: 700px) { .seta { display: none; } }
+
+.pontos { display: flex; gap: .4rem; }
+.pontos button {
+  width: 54px; height: 3px; padding: 0; border: 0; cursor: pointer;
   border-radius: var(--pill); background: rgba(255,255,255,.2);
-  transition: background .35s var(--ease);
+  overflow: hidden; position: relative;
 }
-[data-pontos] button[aria-current="true"] { background: var(--era); }
-[data-pontos] button:hover { background: var(--paper-2); }
-
-/* No toque o trilho vira deslizável com o dedo. Aqui pode ser um
-   container de rolagem: no celular não existe roda de mouse. */
-@media (max-width: 900px) {
-  .atos-track {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    transform: none !important;
-  }
-  .atos-track::-webkit-scrollbar { display: none; }
-  .ato-slide { scroll-snap-align: center; scroll-snap-stop: always; }
+.pontos button i {
+  position: absolute; inset: 0 100% 0 0;
+  background: var(--era);
+  transition: none;
 }
+/* A barra do destaque no ar se preenche no tempo da troca, então o
+   leitor sabe quanto falta em vez de ser surpreendido. */
+.pontos button[aria-current="true"] i { animation: enche var(--dur, 7000ms) linear forwards; }
+@keyframes enche { to { inset: 0 0 0 0; } }
+.pontos button:hover { background: rgba(255,255,255,.4); }
+.palco.parado .pontos button[aria-current="true"] i { animation-play-state: paused; }
 
-/* ---------- Seções seguintes ---------- */
-.secao { padding-block: clamp(3rem, 9vh, 6.5rem); }
-.secao > h2 {
+/* ============================================================
+   SEÇÕES
+   ============================================================ */
+.secao { padding-block: clamp(3rem, 9vh, 6.5rem); position: relative; }
+.secao-cab {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 1.5rem; margin-bottom: clamp(1.2rem, 3.5vh, 2.2rem);
+}
+.secao-cab h2, .secao > h2 {
   font-family: var(--display); text-transform: uppercase;
   font-size: clamp(1.5rem, 1.1rem + 1.7vw, 2.5rem);
-  margin: 0 0 clamp(1.2rem, 3.5vh, 2.2rem);
-  letter-spacing: -.008em; line-height: 1.06;
+  margin: 0; letter-spacing: -.008em; line-height: 1.06;
 }
+.secao-cab .mais {
+  font-size: .84rem; font-weight: 600; color: var(--paper-2);
+  text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: .4rem;
+  transition: color .25s var(--ease), gap .25s var(--ease);
+}
+.secao-cab .mais:hover { color: var(--era); gap: .65rem; }
 
+/* ---------- Leque de matérias ----------
+   O vidro é o cartão inteiro: aresta de 1px, brilho interno no topo e
+   uma bruma que sobe da base atrás do texto. Não existe mais a placa
+   interna — caixa dentro de caixa sobre foto é justamente o que
+   arruinava a leitura da imagem.
+   ---------------------------------------------------------------- */
 .leque {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
-  gap: clamp(.7rem, 1.6vw, 1.2rem);
+  gap: clamp(.7rem, 1.4vw, 1rem);
 }
-/* Com auto-fit puro, um monitor de 2560px gerava seis cartões
-   estreitos demais para a manchete respirar. */
-@media (min-width: 1500px) { .leque { grid-template-columns: repeat(4, 1fr); } }
+/* Num monitor de 2560px o mínimo de 19rem gerava seis cartões estreitos
+   demais para a manchete respirar, então a faixa mínima cresce. Continua
+   auto-FIT, não auto-fill: com quatro trilhas fixas, uma seção de três
+   cartões deixava um buraco à direita. */
+@media (min-width: 1500px) {
+  .leque { grid-template-columns: repeat(auto-fit, minmax(min(23rem, 100%), 1fr)); }
+}
 
 .peca {
-  position: relative;
+  position: relative; isolation: isolate;
   display: flex; flex-direction: column; justify-content: flex-end;
-  min-height: 15rem;
-  padding: clamp(1.1rem, 2.4vw, 1.6rem);
-  border-radius: var(--r-xl);
-  background: var(--glass);
-  border: 1px solid var(--line-2);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  text-decoration: none;
+  min-height: 19rem;
+  padding: clamp(1.05rem, 2vw, 1.4rem);
+  border-radius: var(--r);
   overflow: hidden;
-  transition: transform .4s var(--ease-out), border-color .35s var(--ease);
+  text-decoration: none;
+  background: var(--ink-2);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.14),
+    inset 0 1px 0 rgba(255,255,255,.3),
+    0 18px 44px rgba(0,0,0,.5);
+  transition: transform .45s var(--ease-out), box-shadow .35s var(--ease);
 }
+.peca-foto {
+  position: absolute; inset: 0; z-index: -3;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .8s var(--ease-out);
+}
+/* Bruma da base. Sobe atrás do texto e morre antes da metade. */
+.peca::before {
+  content: ''; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  backdrop-filter: blur(22px) saturate(1.15) brightness(.6);
+  -webkit-backdrop-filter: blur(22px) saturate(1.15) brightness(.6);
+  -webkit-mask-image: linear-gradient(0deg, #000 0 30%, rgba(0,0,0,.6) 52%, transparent 76%);
+          mask-image: linear-gradient(0deg, #000 0 30%, rgba(0,0,0,.6) 52%, transparent 76%);
+}
+/* Chão de contraste, para o texto nunca cair sobre branco puro. */
 .peca::after {
-  content: ''; pointer-events: none;
-  position: absolute; inset: auto -4rem -8rem auto;
-  width: 16rem; height: 16rem; border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--era-rgb), .3), transparent 68%);
-  opacity: 0; transition: opacity .4s var(--ease);
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(0deg, rgba(6,6,8,.82) 0%, rgba(6,6,8,.36) 42%, transparent 74%);
 }
-.peca:hover { transform: translateY(-5px); border-color: rgba(var(--era-rgb), .45); }
-.peca:hover::after { opacity: 1; }
-.peca:active { transform: translateY(0) scale(.995); }
-.peca > * { position: relative; }
+.peca:hover { transform: translateY(-4px);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--era-rgb), .55),
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 26px 60px rgba(0,0,0,.6);
+}
+.peca:hover .peca-foto { transform: scale(1.05); }
+.peca:active { transform: translateY(0) scale(.996); }
+
 .peca h3 {
   font-family: var(--display); text-transform: uppercase;
-  font-size: clamp(1.15rem, 1rem + .8vw, 1.65rem);
+  font-size: clamp(1.1rem, .98rem + .72vw, 1.55rem);
   line-height: 1.06; letter-spacing: -.008em;
-  margin: .7rem 0 .55rem; text-wrap: balance;
+  margin: .65rem 0 .5rem; text-wrap: balance;
+  color: #FFF;
 }
-.peca p { margin: 0 0 .8rem; color: var(--paper-2); font-size: .92rem; line-height: 1.55; }
-.peca.grande { grid-column: span 2; min-height: 21rem; }
-@media (max-width: 760px) { .peca.grande { grid-column: span 1; min-height: 15rem; } }
+.peca p { margin: 0 0 .7rem; color: #DCD9D4; font-size: .9rem; line-height: 1.55; }
+.peca .meta { font-size: .78rem; }
 
-/* ---------- Institucional ---------- */
+.peca.grande { grid-column: span 2; min-height: 27rem; }
+.peca.grande h3 { font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.35rem); max-width: 18ch; }
+@media (max-width: 760px) { .peca.grande { grid-column: span 1; min-height: 20rem; } }
+
+/* ============================================================
+   ROLO DE DISCOS
+   Navegação por clique, não por rolagem. A versão anterior amarrava o
+   trilho ao scroll: passava bonito, mas era impossível parar num disco
+   específico — que é justamente o que se quer fazer aqui, porque cada
+   capa é um filtro de busca por era.
+
+   Clicar numa capa traz ela para o centro e lista as matérias daquele
+   álbum. Setas nas pontas andam de um em um e desligam nos extremos.
+   ============================================================ */
+.rolo { padding-block: clamp(2.5rem, 7vh, 5rem); }
+
+.rolo-quadro { position: relative; }
+
+.rolo-pista {
+  overflow: hidden;
+  padding-block: 1.6rem;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.rolo-trilho {
+  /* Posicionado para que offsetLeft de cada capa seja medido em
+     relação ao trilho, e não a um ancestral qualquer. */
+  position: relative;
+  display: flex; gap: clamp(.9rem, 1.8vw, 1.6rem);
+  padding-inline: var(--pad);
+  width: max-content;
+  will-change: transform;
+  transition: transform .62s var(--ease-out);
+}
+
+/* ---- Setas ---- */
+.rolo-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 4;
+  width: 44px; height: 44px; padding: 0;
+  border-radius: 50%; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(14,14,18,.82);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  color: var(--paper);
+  display: grid; place-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.6);
+  transition: background .25s var(--ease), border-color .25s var(--ease), opacity .3s var(--ease);
+}
+.rolo-btn svg { width: 20px; height: 20px; }
+.rolo-btn.ant  { left: calc(var(--pad) / 2); }
+.rolo-btn.prox { right: calc(var(--pad) / 2); }
+.rolo-btn:hover { background: rgba(24,24,30,.94); border-color: var(--era); }
+.rolo-btn[disabled] { opacity: .22; cursor: default; pointer-events: none; }
+
+/* ---- Caixa de CD ----
+   Frente de jewel case: proporção 142x125mm do estojo, lombada à
+   esquerda, arte quadrada dentro, e o disco saindo por trás quando a
+   capa está selecionada. Tudo em CSS — o mockup de referência é um PSD
+   e um protótipo em HTML não pode depender de um arquivo do Photoshop. */
+.disco {
+  flex: 0 0 clamp(10rem, 15vw, 15.5rem);
+  display: block; padding: 0; border: 0; background: none;
+  text-align: left; cursor: pointer; color: inherit;
+  font: inherit;
+  transition: transform .5s var(--ease-out);
+}
+.disco:hover { transform: translateY(-6px); }
+.disco.on { transform: translateY(-10px); }
+
+.cd { position: relative; display: block; isolation: isolate; }
+
+.cd-caixa {
+  position: relative; display: flex;
+  aspect-ratio: 142 / 125;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #0C0C10;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.2),
+    inset 0 1px 0 rgba(255,255,255,.42),
+    0 20px 40px rgba(0,0,0,.66);
+  transition: box-shadow .4s var(--ease);
+}
+.disco.on .cd-caixa {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--era-rgb), .8),
+    inset 0 1px 0 rgba(255,255,255,.5),
+    0 26px 56px rgba(0,0,0,.72);
+}
+
+/* Lombada */
+.cd-lombada {
+  flex: 0 0 9%;
+  position: relative;
+  background: linear-gradient(90deg, rgba(255,255,255,.2), rgba(255,255,255,.04) 55%, rgba(0,0,0,.45));
+  display: grid; place-items: center; overflow: hidden;
+}
+.cd-lombada i {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-style: normal; font-size: .46rem; letter-spacing: .16em;
+  text-transform: uppercase; white-space: nowrap;
+  color: rgba(255,255,255,.66);
+}
+.cd-arte { flex: 1; min-width: 0; }
+.cd-arte img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Arte ausente: o estojo não finge que tem capa. */
+.cd-arte.vazia {
+  display: grid; place-items: center; padding: .6rem;
+  background: linear-gradient(150deg, rgba(var(--era-rgb), .32), rgba(255,255,255,.05));
+}
+.cd-arte.vazia b {
+  font-family: var(--display); text-transform: uppercase; font-weight: 400;
+  font-size: clamp(1rem, 1.8vw, 1.7rem); line-height: 1.04;
+  text-align: center; color: #FFF; text-wrap: balance;
+}
+.cd-arte.vazia small {
+  position: absolute; left: 9%; right: 0; bottom: .6rem; text-align: center;
+  font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--paper-3);
+}
+
+/* Reflexo do acrílico: uma faixa diagonal e um brilho de canto. */
+.cd-luz {
+  position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background:
+    linear-gradient(114deg,
+      rgba(255,255,255,.3) 0 3%, rgba(255,255,255,.06) 7%, transparent 13%,
+      transparent 44%, rgba(255,255,255,.14) 49%, rgba(255,255,255,.03) 54%, transparent 60%),
+    radial-gradient(90% 60% at 88% 4%, rgba(255,255,255,.14), transparent 62%);
+  mix-blend-mode: screen;
+}
+
+/* O disco sai por trás do estojo. */
+.cd-disco {
+  position: absolute; z-index: -1;
+  top: 7%; bottom: 7%; right: 0; aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #101014 19%, rgba(0,0,0,0) 20%),
+    conic-gradient(from 210deg,
+      #2b2b34, #7d7d8c 10%, #33333d 22%, #8e8e9c 34%, #2f2f39 46%,
+      #75758a 58%, #2b2b34 70%, #9a9aa8 84%, #2b2b34);
+  box-shadow: 0 16px 34px rgba(0,0,0,.72);
+  transform: translateX(0);
+  transition: transform .62s var(--ease-out);
+}
+.disco:hover .cd-disco { transform: translateX(28%); }
+.disco.on .cd-disco { transform: translateX(46%); }
+
+/* Legenda */
+.disco-pe { display: flex; align-items: baseline; gap: .45rem; margin-top: .95rem; }
+.disco-pe::before {
+  content: ''; width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(255,255,255,.2); align-self: center; flex: none;
+  transition: background .3s var(--ease);
+}
+.disco.on .disco-pe::before, .disco:hover .disco-pe::before { background: var(--era); }
+.disco-nome {
+  font-size: .88rem; font-weight: 600; color: var(--paper-2);
+  transition: color .25s var(--ease);
+}
+.disco.on .disco-nome, .disco:hover .disco-nome { color: var(--paper); }
+.disco-ano { font-size: .76rem; color: var(--paper-3); font-variant-numeric: tabular-nums; }
+
+/* ---- Resultado da busca por álbum ---- */
+.rolo-dica {
+  margin: 1.4rem 0 0; padding-inline: var(--pad);
+  max-width: var(--maxw); margin-inline: auto;
+  font-size: .86rem; color: var(--paper-2);
+}
+.rolo-result {
+  max-width: var(--maxw); margin: clamp(1.4rem, 3vh, 2.2rem) auto 0;
+  padding-inline: var(--pad);
+}
+.rolo-result-cab {
+  display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+  padding-bottom: .9rem; margin-bottom: 1.1rem;
+  border-bottom: 1px solid var(--line-2);
+}
+.rolo-result-cab h3 {
+  margin: 0; font-family: var(--display); text-transform: uppercase;
+  font-size: clamp(1.15rem, 1rem + .8vw, 1.7rem); line-height: 1.06; letter-spacing: -.008em;
+}
+.rolo-result-cab span { font-size: .84rem; color: var(--paper-2); }
+.rolo-result-cab button {
+  margin-left: auto; border: 0; background: none; cursor: pointer;
+  font-size: .82rem; font-weight: 600; color: var(--paper-2);
+  transition: color .25s var(--ease);
+}
+.rolo-result-cab button:hover { color: var(--era); }
+
+.achados { display: grid; gap: .3rem; }
+.achado {
+  display: flex; gap: 1rem; align-items: center;
+  padding: .7rem .8rem; border-radius: var(--r-sm);
+  text-decoration: none;
+  transition: background .25s var(--ease);
+}
+.achado + .achado { border-top: 1px solid var(--line-2); }
+.achado:hover { background: rgba(255,255,255,.045); }
+.achado img { width: 92px; height: 60px; object-fit: cover; border-radius: 5px; flex: none; }
+.achado-txt { min-width: 0; }
+.achado b {
+  display: block; font-size: 1rem; font-weight: 600; line-height: 1.34; color: var(--paper);
+  transition: color .25s var(--ease);
+}
+.achado:hover b { color: var(--era); }
+.achado small { font-size: .78rem; color: var(--paper-3); }
+.achado .dur { margin-left: auto; font-size: .78rem; color: var(--paper-3); flex: none; }
+.rolo-vazio {
+  padding: 1.4rem 0; color: var(--paper-2); font-size: .95rem; line-height: 1.6;
+  max-width: 54ch;
+}
+
+/* No toque, trilho deslizável com o dedo. Aqui pode ser container de
+   rolagem: no celular não existe roda de mouse. As propriedades de snap
+   ficam DENTRO do media query — soltas, vazam para o documento quando o
+   container deixa de ser rolável. */
+@media (max-width: 900px) {
+  .rolo-pista {
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none; -ms-overflow-style: none;
+    -webkit-mask-image: none; mask-image: none;
+  }
+  .rolo-pista::-webkit-scrollbar { display: none; }
+  .rolo-trilho { transform: none !important; }
+  .disco { scroll-snap-align: center; }
+  .rolo-btn { display: none; }
+  .achado img { width: 68px; height: 48px; }
+}
+
+/* ============================================================
+   FEED DA MILEY
+   Duas colunas, Instagram e X. O layout é definitivo; a fonte do
+   conteúdo, não: ler perfil de terceiro automaticamente deixou de
+   ser gratuito nas duas plataformas. Ver o LEIA-ME.
+   ============================================================ */
+.feed-grade {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: clamp(.8rem, 1.6vw, 1.2rem);
+  align-items: start;
+}
+@media (max-width: 860px) { .feed-grade { grid-template-columns: 1fr; } }
+
+.feed-col {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.014));
+  overflow: hidden;
+}
+.feed-cab {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .85rem 1.05rem;
+  border-bottom: 1px solid var(--line-2);
+}
+.feed-cab svg { width: 18px; height: 18px; color: var(--paper-2); }
+.feed-cab b { font-size: .88rem; }
+.feed-cab .arroba { font-size: .8rem; color: var(--paper-3); }
+.feed-vivo {
+  margin-left: auto; display: inline-flex; align-items: center; gap: .42rem;
+  font-size: .76rem; color: var(--paper-3); font-variant-numeric: tabular-nums;
+}
+/* Ponto estático, não pulsante. Pulsar é promessa de dado ao vivo, e
+   este feed ainda não é: enquanto a fonte automática não existir, o
+   ponto marca a rede e quem diz a idade do conteúdo é o texto ao
+   lado. Quando a fonte entrar, aí sim a pulsação se justifica. */
+.feed-vivo i { width: 6px; height: 6px; border-radius: 50%; background: var(--era); }
+
+/* Coluna do X: lista de texto. */
+.feed-post {
+  display: block; padding: .9rem 1.05rem; text-decoration: none;
+  border-top: 1px solid var(--line-2);
+  transition: background .25s var(--ease);
+}
+.feed-col .feed-post:first-of-type { border-top: 0; }
+.feed-post:hover { background: rgba(255,255,255,.05); }
+.feed-post p { margin: 0 0 .45rem; font-size: .94rem; line-height: 1.5; color: var(--paper); }
+.feed-post time { font-size: .76rem; color: var(--paper-3); }
+
+/* Coluna do Instagram: grade de quadrados, como no perfil. */
+/* auto-fit, não 1fr 1fr: numa coluna larga, dois quadrados viram dois
+   blocos de 400px e a coluna do Instagram fica com o dobro da altura
+   da coluna do X. Assim a grade vira uma fileira em tela grande e duas
+   colunas no celular. */
+.feed-grade-ig {
+  display: grid; gap: 2px;
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 48%), 1fr));
+}
+.feed-tile {
+  position: relative; display: block; aspect-ratio: 1;
+  overflow: hidden; text-decoration: none; background: var(--ink-2);
+}
+.feed-tile img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .7s var(--ease-out);
+}
+.feed-tile:hover img { transform: scale(1.06); }
+.feed-tile-txt {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 1.6rem .7rem .6rem;
+  font-size: .78rem; line-height: 1.35; color: #FFF;
+  background: linear-gradient(0deg, rgba(6,6,8,.92), rgba(6,6,8,.5) 55%, transparent);
+  opacity: 0; transition: opacity .3s var(--ease);
+}
+.feed-tile:hover .feed-tile-txt, .feed-tile:focus-visible .feed-tile-txt { opacity: 1; }
+/* No toque não existe hover: a legenda fica. */
+@media (hover: none) { .feed-tile-txt { opacity: 1; } }
+
+.feed-pe {
+  display: block; padding: .75rem 1.05rem;
+  border-top: 1px solid var(--line-2);
+  font-size: .82rem; font-weight: 600; color: var(--era);
+  text-decoration: none;
+  transition: background .25s var(--ease);
+}
+.feed-pe:hover { background: rgba(var(--era-rgb), .1); }
+
+.feed-nota {
+  margin: 1.1rem 0 0; max-width: 78ch;
+  font-size: .82rem; line-height: 1.6; color: var(--paper-3);
+}
+.feed-nota strong { color: var(--paper-2); font-weight: 600; }
+
+/* ============================================================
+   INSTITUCIONAL
+   ============================================================ */
 .inst h3 { font-family: var(--display); text-transform: uppercase; letter-spacing: -.008em; line-height: 1.02; }
-.inst-grade { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(1rem, 2.4vw, 2rem); align-items: stretch; }
+.inst-grade { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(.8rem, 1.6vw, 1.2rem); align-items: stretch; }
 @media (max-width: 900px) { .inst-grade { grid-template-columns: 1fr; } }
+.inst { border-radius: var(--r); }
+
+/* Painel gelado — o "frost glass" pedido. Difere da placa de vidro
+   por ser opaco o bastante para segurar lista longa: vidro puro atrás
+   de texto pequeno em lista vira ruído. */
 .painel {
   padding: clamp(1.3rem, 2.8vw, 2rem);
-  border-radius: var(--r-xl);
-  background: var(--glass);
-  border: 1px solid var(--line-2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--r);
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.028) 55%),
+    rgba(12,12,16,.5);
+  backdrop-filter: blur(34px) saturate(170%);
+  -webkit-backdrop-filter: blur(34px) saturate(170%);
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 24px 60px rgba(0,0,0,.5);
+  position: relative; overflow: hidden;
 }
+/* Grão fino: o que separa "frost" de "borrado" é a textura. */
+.painel::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  opacity: .5; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23f)' opacity='.35'/%3E%3C/svg%3E");
+}
+.painel > * { position: relative; }
 .painel h4 {
   font-family: var(--display); text-transform: uppercase;
   font-size: 1.05rem; letter-spacing: -.005em; margin: 0 0 1rem; color: var(--paper);
 }
 .painel h4 + .canais { margin-bottom: 1.6rem; }
+.canal { border-radius: var(--r-sm); }
+.canal svg { width: 17px; height: 17px; flex: none; }
+/* Rede sem endereço conhecido: aparece desligada, com o motivo. Link
+   morto num protótipo de aprovação é pior que uma lacuna assumida. */
+.canal.pendente {
+  opacity: .5; pointer-events: none;
+  border-style: dashed;
+}
+.canal.pendente em { font-style: normal; font-weight: 500; color: var(--paper-3); font-size: .78em; }
+
+/* ============================================================
+   BOTÃO NEON
+   Dois anéis cônicos girando em sentidos opostos, um borrado fazendo
+   o halo e outro de 1px fazendo a aresta. Acelera no hover e tem
+   carga própria no foco de teclado.
+   ============================================================ */
+@property --giro  { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@property --giro2 { syntax: '<angle>'; inherits: true; initial-value: 180deg; }
+
+.btn.neon {
+  position: relative; isolation: isolate;
+  background: rgba(255,255,255,.04);
+  color: var(--paper);
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  animation: giro-lento 7s linear infinite;
+}
+/* Sem halo borrado por fora: só a linha girando na borda. O brilho
+   externo dava ar de sirene, que é ruído num botão institucional. */
+.btn.neon::after {
+  content: ''; position: absolute; inset: -1px; z-index: -1;
+  border-radius: inherit; padding: 1px;
+  background: conic-gradient(from var(--giro2),
+      rgba(255,255,255,.08), var(--era) 18%, rgba(255,255,255,.08) 38%,
+      var(--era-soft) 62%, rgba(255,255,255,.08) 82%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+/* O rótulo precisa ficar acima dos dois anéis, que são z-index -1. */
+.btn.neon > span { position: relative; z-index: 1; }
+.btn.neon:hover { transform: translateY(-2px); animation-duration: 2.2s; }
+.btn.neon:focus-visible { animation-duration: 1.2s; }
+@keyframes giro-lento { to { --giro: 360deg; --giro2: 540deg; } }
+@media (prefers-reduced-motion: reduce) { .btn.neon { animation: none; } }
+
+/* A faixa de mutirão herda o mesmo botão, em versão sólida. */
+.mutirao a { border-radius: var(--pill); }
 
 /* ============================================================
    PÁGINA DE MATÉRIA
-   Espetáculo na porta, silêncio dentro.
+   Espetáculo na porta, silêncio dentro — mas o espetáculo agora tem
+   foto, e o título assenta sobre bruma em vez de boiar a um respiro
+   da borda. Nada de dissolver o título na rolagem: era isso que fazia
+   ele "sumir com facilidade".
    ============================================================ */
 .poster {
-  position: sticky; top: 0;
-  height: 100svh;
+  position: relative;
+  min-height: clamp(32rem, 88svh, 52rem);
   display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 0 var(--pad) clamp(3rem, 9vh, 5rem);
+  padding: calc(var(--h-topo) + 2rem) var(--pad) clamp(4rem, 11vh, 7rem);
   overflow: hidden;
-  z-index: 0;
+  isolation: isolate;
 }
-.poster::before {
-  content: ''; pointer-events: none;
-  position: absolute; inset: 0; z-index: -1;
+.poster-foto { position: absolute; inset: -8% 0 0; z-index: -2; will-change: transform; }
+.poster-foto img { width: 100%; height: 100%; object-fit: cover; }
+.poster-foto::after {
+  content: ''; position: absolute; inset: 0;
   background:
-    radial-gradient(60vw 55vw at 76% 6%, rgba(var(--era-rgb), .42), transparent 62%),
-    radial-gradient(52vw 48vw at 12% 84%, rgba(var(--era-rgb), .14), transparent 66%);
+    linear-gradient(0deg, rgba(6,6,8,.84) 0%, rgba(6,6,8,.44) 26%, transparent 58%, rgba(6,6,8,.45) 100%),
+    linear-gradient(90deg, rgba(6,6,8,.4) 0%, transparent 48%);
 }
-.poster-in { max-width: var(--maxw); margin-inline: auto; width: 100%; }
-.poster h1 {
+.poster-in { position: relative; width: 100%; max-width: var(--maxw); margin-inline: auto; }
+.poster-txt {
+  max-width: 46rem;
+  --bruma-inset: -30rem -9rem -30rem -100vw;
+  --bruma-blur: 38px;
+  --bruma-luz: .44;
+  --bruma-mask: linear-gradient(90deg, #000 0 50%, rgba(0,0,0,.3) 80%, transparent 100%);
+}
+.poster-txt h1 {
   margin: 1rem 0 1.1rem;
-  font-size: clamp(2.5rem, 6.6vw, 6rem);
-  max-width: 16ch;
+  font-size: clamp(2.15rem, 5.1vw, 4.8rem);
+  max-width: 17ch;
+  text-shadow: 0 2px 34px rgba(0,0,0,.45);
 }
-.poster .sub { font-size: clamp(1rem, .92rem + .5vw, 1.25rem); line-height: 1.5; color: #D8D5D0; max-width: 46ch; margin: 0; }
+.poster-txt .sub {
+  font-size: clamp(1.02rem, .94rem + .5vw, 1.26rem);
+  line-height: 1.5; color: #E4E1DC; max-width: 50ch; margin: 0;
+}
+.poster-cred {
+  /* Sem caixa alta: são 35 caracteres, e caixa alta apaga ascendente e
+     descendente, que é por onde o olho reconhece a palavra. */
+  margin: 1.1rem 0 0; font-size: .78rem; letter-spacing: .01em;
+  color: rgba(255,255,255,.76);
+}
 
 .silencio {
   position: relative; z-index: 1;
   background: var(--ink);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
-  box-shadow: 0 -40px 90px rgba(0,0,0,.78);
-  padding: clamp(2.4rem, 7vh, 4.5rem) var(--pad) clamp(2rem, 5vh, 3.5rem);
-  margin-top: -3rem;
+  box-shadow: 0 -30px 80px rgba(0,0,0,.8);
+  padding: clamp(2.2rem, 6vh, 4rem) var(--pad) clamp(2rem, 5vh, 3.5rem);
+  margin-top: -2.5rem;
 }
 .silencio .assin {
   max-width: min(68ch, 100%); margin: 0 auto clamp(1.8rem, 4vh, 2.6rem);
@@ -240,12 +837,24 @@ body { font-family: var(--texto); }
 }
 .av {
   width: 36px; height: 36px; border-radius: 50%; flex: none;
-  background: linear-gradient(140deg, var(--era), var(--era-deep));
-  display: grid; place-items: center; font-size: .76rem; font-weight: 700; color: #fff;
+  /* Inicial branca sobre o vermelho da Era dá 3.7:1, abaixo do mínimo
+     para texto pequeno. Disco escuro com anel: a cor continua sendo a
+     da Era e o contraste passa. */
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1.5px rgba(var(--era-rgb), .6);
+  display: grid; place-items: center;
+  font-size: .76rem; font-weight: 700; color: var(--era);
 }
 .silencio .leitura h2 {
   font-family: var(--display); text-transform: uppercase;
   letter-spacing: 0; line-height: 1.1; font-weight: 400;
+  position: relative; padding-top: .7em;
+}
+/* Fio da Era acima de cada intertítulo, desenhado na chegada. */
+.silencio .leitura h2::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: var(--fio, 100%); max-width: 3.4rem; height: 2px;
+  background: var(--era); border-radius: var(--pill);
 }
 
 .art-fim {
@@ -253,4 +862,161 @@ body { font-family: var(--texto); }
   padding-top: 1.5rem; border-top: 1px solid var(--line-2);
   display: flex; gap: .55rem; flex-wrap: wrap; align-items: center;
   font-size: .88rem; color: var(--paper-3);
+}
+
+/* ============================================================
+   QUADRO FLUTUANTE DE CIRCULAÇÃO
+   Fixo: entra quando a leitura começa e fica até o fim da página. O
+   botão recolhe em vez de dispensar — na versão anterior, fechado uma
+   vez, ele não voltava mais, e um atalho de navegação que some para
+   sempre é um atalho que não existe.
+
+   Só entra onde sobra largura ao lado da coluna de leitura (1240px).
+   Abaixo disso ele competiria com o texto, que é o oposto do objetivo.
+   ============================================================ */
+.dock { display: none; }
+@media (min-width: 1240px) {
+  .dock {
+    position: fixed; right: 1.4rem; bottom: 5.2rem; z-index: 60;
+    display: block; width: 19.5rem;
+    padding: .95rem 1.05rem 1.05rem;
+    border-radius: var(--r);
+    background: rgba(13,13,17,.72);
+    backdrop-filter: blur(30px) saturate(1.5);
+    -webkit-backdrop-filter: blur(30px) saturate(1.5);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.12),
+      inset 0 1px 0 rgba(255,255,255,.28),
+      0 24px 60px rgba(0,0,0,.6);
+    opacity: 0; transform: translateY(14px);
+    pointer-events: none;
+    /* Só opacidade e transform. Largura e padding animados forçam
+       relayout da página a cada quadro; o recolher é uma troca de
+       estado, e troca de estado pode ser instantânea. */
+    transition: opacity .45s var(--ease), transform .45s var(--ease-out);
+  }
+  .dock.aberto { opacity: 1; transform: none; pointer-events: auto; }
+
+  .dock-cab { display: flex; align-items: center; gap: .6rem; }
+  .dock h3 {
+    margin: 0; font-size: .74rem; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--era);
+  }
+  .dock-toggle {
+    margin-left: auto; flex: none;
+    width: 24px; height: 24px; padding: 0; line-height: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: rgba(255,255,255,.08); color: var(--paper-2);
+    display: grid; place-items: center;
+    transition: color .25s var(--ease), background .25s var(--ease), transform .35s var(--ease);
+  }
+  .dock-toggle svg { width: 14px; height: 14px; }
+  .dock-toggle:hover { color: var(--paper); background: rgba(255,255,255,.18); }
+
+  .dock ol {
+    list-style: none; margin: .7rem 0 0; padding: 0;
+    overflow: hidden;
+    transition: opacity .3s var(--ease);
+  }
+  .dock li + li { border-top: 1px solid var(--line-2); }
+  .dock a { display: flex; gap: .7rem; align-items: center; padding: .6rem 0; text-decoration: none; }
+  .dock img { width: 54px; height: 40px; object-fit: cover; border-radius: 5px; flex: none; }
+  .dock b {
+    font-size: .84rem; font-weight: 600; line-height: 1.3; color: var(--paper);
+    transition: color .25s var(--ease);
+  }
+  .dock a:hover b { color: var(--era); }
+
+  /* Recolhido: sobra a etiqueta, que reabre. */
+  .dock.encolhido { width: auto; padding: .6rem .7rem .6rem .95rem; }
+  .dock.encolhido ol { display: none; }
+  .dock.encolhido .dock-toggle { transform: rotate(180deg); }
+}
+
+/* ============================================================
+   CARREGAMENTO E TRANSIÇÃO DE PÁGINA
+   O anel de moedas tomba nas cores da Era. A cortina desce e sobe
+   na troca de página.
+
+   Ambos se removem sozinhos por animação CSS com fallback de tempo:
+   se o JavaScript quebrar, nada fica cobrindo o site. Overlay preso
+   é o pior defeito possível numa página de leitura.
+   ============================================================ */
+.carregando {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center; gap: 2rem;
+  align-content: center;
+  background: var(--ink);
+  animation: some-sozinho 2.6s forwards;
+}
+.carregando.pronto { animation: some-agora .45s forwards; }
+@keyframes some-sozinho {
+  0%, 82% { opacity: 1; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; }
+}
+@keyframes some-agora { to { opacity: 0; visibility: hidden; } }
+
+.moedas {
+  width: 108px; height: 108px; position: relative;
+  transform-style: preserve-3d;
+  animation: anel 4.2s linear infinite;
+}
+.moedas i {
+  position: absolute; left: 50%; top: 50%;
+  width: 26px; height: 26px; margin: -13px;
+  transform: rotate(calc(var(--i) * 45deg)) translateX(42px);
+  transform-style: preserve-3d;
+}
+.moedas b {
+  display: block; width: 100%; height: 100%; border-radius: 50%;
+  background: conic-gradient(from 0deg, #FFF, var(--era) 20%, #6c6c74 38%,
+              #FFF 52%, var(--era-soft) 70%, #4a4a52 86%, #FFF);
+  box-shadow: 0 0 16px rgba(var(--era-rgb), .55), inset 0 0 6px rgba(0,0,0,.5);
+  animation: tombo 1.7s linear infinite;
+  animation-delay: calc(var(--i) * -.14s);
+}
+@keyframes anel  { to { transform: rotate(-360deg); } }
+@keyframes tombo { to { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); } }
+.carregando p {
+  margin: 0; font-family: var(--display); text-transform: uppercase;
+  font-size: .9rem; letter-spacing: .38em; text-indent: .38em;
+  color: var(--paper-3);
+}
+
+.transicao {
+  position: fixed; inset: 0; z-index: 190;
+  pointer-events: none;
+  background: var(--ink-1);
+  display: grid; place-items: center;
+  /* Estado de repouso = fora da tela. Se o JavaScript nunca rodar,
+     a cortina simplesmente não existe para o leitor. */
+  clip-path: inset(0 0 100% 0);
+}
+.transicao span {
+  font-family: var(--display); text-transform: uppercase;
+  font-size: clamp(2.5rem, 9vw, 7rem); color: var(--era);
+  letter-spacing: -.02em; opacity: .9;
+}
+/* Saída: a cortina sobe e cobre, depois o navegador troca de página. */
+.transicao.entra { animation: cortina-entra .48s cubic-bezier(.76,0,.24,1) forwards; }
+
+/* Chegada: quem veio de uma transição interna recebe a classe
+   "chegando" no <html> ainda dentro do <head>, antes do primeiro
+   quadro. A cortina já nasce cobrindo e sai por animação CSS pura —
+   sem depender de script, para que uma falha nunca deixe o leitor
+   olhando um retângulo preto. */
+html.chegando .transicao { animation: cortina-sai .62s .04s cubic-bezier(.76,0,.24,1) both; }
+html.chegando .carregando { display: none; }
+
+@keyframes cortina-entra { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes cortina-sai   { from { clip-path: inset(0 0 0 0); }    to { clip-path: inset(0 0 100% 0); } }
+
+/* Assentamento da página que chega. Só transform: se o quadro
+   congelar, o conteúdo está no lugar, só um respiro deslocado —
+   nunca invisível. */
+.camada { animation: assenta .7s var(--ease-out) both; }
+@keyframes assenta { from { transform: translateY(16px); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .camada { animation: none; }
+  .carregando, .transicao { display: none; }
 }

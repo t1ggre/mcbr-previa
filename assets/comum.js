@@ -79,9 +79,11 @@
   }
 
   /* ---------- Contagem regressiva do mutirão ---------- */
+  var contando = false;
   function montaContagem() {
     var el = document.querySelector('.mutirao .rel');
-    if (!el || !D.mutirao) return;
+    if (!el || !D.mutirao || contando) return;
+    contando = true;
     function upd() {
       var ms = new Date(D.mutirao.prazo) - new Date();
       if (ms <= 0) {
@@ -105,6 +107,10 @@
                   '<span class="rel"></span>' +
                   '<a href="#">' + D.mutirao.cta + '</a>';
     destino.prepend(f);
+    /* A contagem parte daqui, não do boot: a faixa é montada pela
+       página e pode nascer depois do DOMContentLoaded — foi assim que
+       o Palco ficou com a contagem vazia. */
+    montaContagem();
   };
 
   /* ---------- Metadados: um separador por linha, no máximo ---------- */
@@ -200,13 +206,162 @@
     });
   };
 
-  /* ---------- Corpo da matéria ---------- */
+  /* ============================================================
+     CORPO DA MATÉRIA
+     Um renderizador por bloco do Painel. O nome entre parênteses é
+     como o bloco se chama no WordPress, para que a conversa com a
+     equipe e o código usem a mesma palavra.
+     ============================================================ */
+
+  function figLegenda(b) {
+    if (!b.leg && !b.cred) return '';
+    return '<figcaption>' + (b.leg || '') +
+           (b.cred ? '<span class="cred">' + b.cred + '</span>' : '') +
+           '</figcaption>';
+  }
+
+  /* Foto: sempre com proporção declarada no HTML. Sem width/height o
+     navegador reflui a página quando a imagem chega e o leitor perde
+     a linha que estava lendo. */
+  function foto(src, alt, cls) {
+    return '<img src="' + src + '" alt="' + (alt || '') + '"' +
+           (cls ? ' class="' + cls + '"' : '') +
+           ' loading="lazy" decoding="async">';
+  }
+
+  var MARCA = {
+    instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.7 3h3.3l-7.2 8.2L22 21h-6.6l-5.2-6.6L4.3 21H1l7.7-8.8L1.5 3h6.8l4.7 6.1zm-1.2 16h1.8L7.6 4.8H5.6z"/></svg>',
+    tiktok: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.3 2h-3v13.2a2.9 2.9 0 1 1-2.4-2.85V9.3A6 6 0 1 0 16.3 15V8.9a7 7 0 0 0 4.2 1.4V7.2a4.2 4.2 0 0 1-4.2-4.2z"/></svg>',
+    youtube: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15.2V8.8l5.2 3.2z"/></svg>',
+    spotify: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.4 14.5a.75.75 0 0 1-1 .25c-2.8-1.7-6.3-2.1-10.4-1.15a.75.75 0 1 1-.34-1.46c4.5-1.03 8.4-.58 11.5 1.32.35.22.46.68.24 1.04zm1.2-2.9a.94.94 0 0 1-1.3.3c-3.2-2-8.1-2.55-11.9-1.4a.94.94 0 0 1-.54-1.8c4.35-1.3 9.75-.68 13.43 1.6.44.27.58.85.3 1.3zm.1-3a1.12 1.12 0 0 1-1.54.37C12.4 8.66 6.6 8.45 3.9 9.28a1.12 1.12 0 1 1-.65-2.15c3.1-.94 9.5-.7 13.3 1.57.53.32.7 1 .38 1.53z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.5-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12z"/></svg>',
+    ytmusic: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18.3a8.3 8.3 0 1 1 0-16.6 8.3 8.3 0 0 1 0 16.6zM9.7 8.1l6.3 3.9-6.3 3.9z"/></svg>',
+    deezer: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+      '<rect x="15.8" y="4"    width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="15.8" y="8.2"  width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="8.6"  y="8.2"  width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="15.8" y="12.4" width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="8.6"  y="12.4" width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="1.5"  y="12.4" width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="15.8" y="16.6" width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="8.6"  y="16.6" width="6.7" height="2.5" rx=".7"/>' +
+      '<rect x="1.5"  y="16.6" width="6.7" height="2.5" rx=".7"/></svg>'
+  };
+  /* As mesmas marcas servem aos embeds da matéria e aos botões de rede
+     da Home. Uma fonte só: logo desenhado duas vezes diverge. */
+  window.MARCAS = MARCA;
+
+  var REDE_NOME = { instagram: 'Instagram', x: 'X', tiktok: 'TikTok', youtube: 'YouTube', spotify: 'Spotify' };
+
+  /* Fachada de embed social. O conteúdo de terceiro permanece hospedado
+     na origem (ADR 0002): a fachada mostra o recorte e leva ao original.
+     No site final o script oficial de cada rede substitui esta caixa. */
+  function embedSocial(b) {
+    return '<figure class="embed social" data-rede="' + b.rede + '">' +
+      '<a class="embed-box" href="' + b.href + '" target="_blank" rel="noopener">' +
+        '<div class="embed-topo">' +
+          '<span class="embed-av" aria-hidden="true">M</span>' +
+          '<div class="embed-quem"><b>' + b.autor + '</b><span>' + b.handle + '</span></div>' +
+          '<span class="embed-marca" aria-hidden="true">' + MARCA[b.rede] + '</span>' +
+        '</div>' +
+        '<p class="embed-txt">' + b.c + '</p>' +
+        (b.img ? '<div class="embed-foto">' + foto(b.img, '') + '</div>' : '') +
+        '<div class="embed-pe"><time>' + b.data + '</time>' +
+          '<span class="embed-ir">Ver no ' + REDE_NOME[b.rede] + '</span></div>' +
+      '</a>' +
+    '</figure>';
+  }
+
+  /* YouTube por clique. O iframe do YouTube pesa mais que a matéria
+     inteira; entra só quando o leitor pede. */
+  function embedYoutube(b) {
+    return '<figure class="embed video" data-yt="' + b.id + '">' +
+      '<button class="video-capa" type="button" aria-label="Reproduzir: ' + b.titulo + '">' +
+        '<img src="https://i.ytimg.com/vi/' + b.id + '/maxresdefault.jpg" alt="" loading="lazy" decoding="async">' +
+        '<span class="video-play" aria-hidden="true">' + MARCA.youtube + '</span>' +
+      '</button>' +
+      (b.leg ? '<figcaption>' + b.leg + '</figcaption>' : '') +
+    '</figure>';
+  }
+
+  function embedSpotify(b) {
+    return '<figure class="embed audio">' +
+      '<iframe src="' + b.src + '" width="100%" height="352" frameborder="0" loading="lazy" ' +
+      'title="' + b.titulo + '" allow="clipboard-write; encrypted-media; picture-in-picture"></iframe>' +
+      (b.leg ? '<figcaption>' + b.leg + '</figcaption>' : '') +
+    '</figure>';
+  }
+
+  /* Lista de posts: seleção manual ou por categoria, no meio do texto.
+     É o bloco que mais segura o leitor dentro do site. */
+  function listaPosts(b) {
+    var itens = D.materias.slice(b.de || 0, b.ate || 4);
+    return '<aside class="lista-posts">' +
+      '<h3>' + (b.titulo || 'Leia também') + '</h3>' +
+      '<ol>' + itens.map(function (m) {
+        return '<li><a href="materia.html">' +
+          '<span class="lp-foto">' + foto(m.img, '') + '</span>' +
+          '<span class="lp-txt"><b>' + m.titulo + '</b>' +
+          '<small>' + m.cat + ' · ' + m.dataCurta + '</small></span>' +
+        '</a></li>';
+      }).join('') + '</ol>' +
+    '</aside>';
+  }
+
+  var BLOCO = {
+    p:   function (b) { return '<p>' + b.c + '</p>'; },
+    h2:  function (b) { return '<h2>' + b.c + '</h2>'; },
+    q:   function (b) { return '<blockquote><p>“' + b.c + '”</p><cite>' + b.a + '</cite></blockquote>'; },
+    sep: function () { return '<hr class="sep">'; },
+
+    fig: function (b) {
+      return '<figure class="fig">' + foto(b.src, b.alt) + figLegenda(b) + '</figure>';
+    },
+    'fig-larga': function (b) {
+      return '<figure class="fig larga">' + foto(b.src, b.alt) + figLegenda(b) + '</figure>';
+    },
+    dupla: function (b) {
+      return '<figure class="fig larga dupla"><div class="par">' +
+        foto(b.a.src, b.a.alt) + foto(b.b.src, b.b.alt) +
+        '</div>' + figLegenda(b) + '</figure>';
+    },
+    mt: function (b) {
+      return '<div class="mt" data-lado="' + (b.lado || 'esq') + '">' +
+        '<figure>' + foto(b.src, b.alt) + '</figure>' +
+        '<div class="mt-txt">' + (b.titulo ? '<h3>' + b.titulo + '</h3>' : '') +
+        '<p>' + b.c + '</p></div>' +
+      '</div>';
+    },
+    lista: listaPosts,
+
+    embed: function (b) {
+      if (b.rede === 'youtube') return embedYoutube(b);
+      if (b.rede === 'spotify') return embedSpotify(b);
+      return embedSocial(b);
+    }
+  };
+
   window.montaCorpo = function (alvo) {
     alvo.innerHTML = D.corpo.map(function (b) {
-      if (b.t === 'h2') return '<h2>' + b.c + '</h2>';
-      if (b.t === 'q') return '<blockquote><p>“' + b.c + '”</p><cite>' + b.a + '</cite></blockquote>';
-      return '<p>' + b.c + '</p>';
+      return (BLOCO[b.t] || BLOCO.p)(b);
     }).join('');
+
+    /* Troca a capa pelo player só no clique. Delegado: os blocos são
+       montados por JS e podem ser remontados. */
+    alvo.addEventListener('click', function (ev) {
+      var capa = ev.target.closest && ev.target.closest('.video-capa');
+      if (!capa) return;
+      var fig = capa.closest('.video');
+      var id = fig.getAttribute('data-yt');
+      var quadro = document.createElement('iframe');
+      quadro.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0';
+      quadro.title = capa.getAttribute('aria-label').replace('Reproduzir: ', '');
+      quadro.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen';
+      quadro.setAttribute('allowfullscreen', '');
+      quadro.frameBorder = '0';
+      capa.replaceWith(quadro);
+    });
   };
 
   /* ---------- Boot ---------- */
